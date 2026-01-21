@@ -18,9 +18,10 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "output": "static"
+      "output": "static",
+      "bundler": "metro"
     },
-    "plugins": [],
+    "plugins": ["expo-font", "expo-router"],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
