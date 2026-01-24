@@ -1,9 +1,10 @@
-import { Text, View } from "react-native";
+import { Text } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function myExperience() {
   return (
-    <View className="items-center justify-center flex-1 bg-slate-900">
+    <SafeAreaView className="items-center justify-center flex-1 bg-slate-900">
       <Text className="text-xl font-bold text-orange-600 ">MyExperience</Text>
-    </View>
+    </SafeAreaView>
   );
 }
