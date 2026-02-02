@@ -42,20 +42,6 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="swipe"
-        options={{
-          headerTitle: "Swipe",
-          title: "Swipe",
-          tabBarIcon: ({ focused, color }) => (
-            <Ionicons
-              name={focused ? "albums" : "albums-outline"}
-              size={30}
-              color={color}
-            />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="myExperience"
         options={{
           headerTitle: "MyExperience",
@@ -63,6 +49,20 @@ export default function TabsLayout() {
           tabBarIcon: ({ focused, color }) => (
             <Ionicons
               name={focused ? "add-circle-sharp" : "add-circle-outline"}
+              size={30}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="swipe"
+        options={{
+          headerTitle: "Swipe",
+          title: "Swipe",
+          tabBarIcon: ({ focused, color }) => (
+            <Ionicons
+              name={focused ? "albums" : "albums-outline"}
               size={30}
               color={color}
             />
