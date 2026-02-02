@@ -16,7 +16,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          headerTitle: "Map",
+          headerShown: false,
           title: "Map",
           tabBarIcon: ({ focused, color }) => (
             <Ionicons

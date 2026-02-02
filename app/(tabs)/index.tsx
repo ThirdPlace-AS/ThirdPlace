@@ -1,11 +1,24 @@
-import { Text } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { AppleMaps, GoogleMaps } from "expo-maps";
+import { Platform, Text } from "react-native";
 import "../../global.css";
 
 export default function App() {
-  return (
-    <SafeAreaView className="items-center justify-center flex-1 bg-slate-900">
-      <Text className="text-xl font-bold text-orange-600 ">Map</Text>
-    </SafeAreaView>
-  );
+  if (Platform.OS === "ios") {
+    return <AppleMaps.View style={{ flex: 1 }} />;
+  } else if (Platform.OS === "android") {
+    return (
+      <GoogleMaps.View
+        style={{ flex: 1 }}
+        cameraPosition={{
+          coordinates: {
+            latitude: 59.9138,
+            longitude: 10.7387,
+          },
+          zoom: 11,
+        }}
+      />
+    );
+  } else {
+    return <Text>Maps are only available on Android and iOS</Text>;
+  }
 }
