@@ -129,19 +129,19 @@ export default function App() {
           {/* Bottom Content */}
           <View className="flex-col gap-4 mb-4">
             <TouchableOpacity
-              activeOpacity={0.8}
-              className="items-center self-end justify-center bg-orange-500 rounded-full w-14 h-14"
+              activeOpacity={0.87}
+              className="items-center self-end justify-center w-12 h-12 bg-orange-500 rounded-full"
               style={{ elevation: 8, shadowOpacity: 0.3, shadowRadius: 4 }}
             >
-              <Ionicons name="add" size={32} color="#ffff" />
+              <Ionicons name="add" size={23} color="#ffff" />
             </TouchableOpacity>
 
             <TouchableOpacity
-              activeOpacity={0.8}
-              className="items-center self-end justify-center bg-white rounded-full w-14 h-14"
+              activeOpacity={0.87}
+              className="items-center self-end justify-center w-12 h-12 bg-white rounded-full"
               style={{ elevation: 8, shadowOpacity: 0.3, shadowRadius: 4 }}
             >
-              <Ionicons name="locate" size={26} color="#f54900" />
+              <Ionicons name="locate" size={23} color="#f54900" />
             </TouchableOpacity>
           </View>
         </SafeAreaView>
