@@ -39,14 +39,19 @@ export default function App() {
           style={{
             flex: 1,
             position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
+            inset: 0,
           }}
           cameraPosition={{
             coordinates: { ...INITIAL_REGION },
             zoom: 15,
+          }}
+          uiSettings={{
+            zoomControlsEnabled: false, // Hides the +/- buttons
+            myLocationButtonEnabled: false, // Hides the default GPS button
+            compassEnabled: true, // Keeps the compass visible
+            mapToolbarEnabled: false, // Hides the "Open in Maps" toolbar
+            scrollGesturesEnabled: true,
+            zoomGesturesEnabled: true,
           }}
         />
         <SafeAreaView
@@ -124,7 +129,7 @@ export default function App() {
           {/* Bottom Content */}
           <View className="flex-col gap-4 mb-4">
             <TouchableOpacity
-              activeOpacity={0.7}
+              activeOpacity={0.8}
               className="items-center self-end justify-center bg-orange-500 rounded-full w-14 h-14"
               style={{ elevation: 8, shadowOpacity: 0.3, shadowRadius: 4 }}
             >
@@ -132,7 +137,7 @@ export default function App() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              activeOpacity={0.7}
+              activeOpacity={0.8}
               className="items-center self-end justify-center bg-white rounded-full w-14 h-14"
               style={{ elevation: 8, shadowOpacity: 0.3, shadowRadius: 4 }}
             >
