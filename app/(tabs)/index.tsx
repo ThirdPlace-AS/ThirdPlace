@@ -48,7 +48,7 @@ export default function App() {
           uiSettings={{
             zoomControlsEnabled: false, // Hides the +/- buttons
             myLocationButtonEnabled: false, // Hides the default GPS button
-            compassEnabled: true, // Keeps the compass visible
+            compassEnabled: false, // Keeps the compass visible
             mapToolbarEnabled: false, // Hides the "Open in Maps" toolbar
             scrollGesturesEnabled: true,
             zoomGesturesEnabled: true,
