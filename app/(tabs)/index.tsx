@@ -7,6 +7,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import "../../global.css";
@@ -18,14 +19,20 @@ const INITIAL_REGION = {
 
 export default function App() {
   const [selectedFilter, setSelectedFilter] = useState("Now");
-  const filters = ["Now", "Today", "This week", "This weekend", "This month"];
+  const filters = [
+    "All",
+    "Now",
+    "Today",
+    "This week",
+    "This weekend",
+    "This month",
+  ];
 
   // iOS implementation
   if (Platform.OS === "ios") {
     return <AppleMaps.View style={{ flex: 1 }} />;
   } else if (Platform.OS === "android") {
     // Android implementation
-
     return (
       <>
         <GoogleMaps.View
@@ -43,57 +50,67 @@ export default function App() {
           }}
         />
         <SafeAreaView
-          className="flex-col justify-between flex-1 pl-2 pr-2 border-2 border-green-600 "
+          className="flex-col justify-between flex-1 px-4"
           pointerEvents="box-none"
         >
-          / / Top Content / /
-          <SafeAreaView className="border-2 ">
-            <SafeAreaView className="flex-row items-center justify-center h-0 border-2 border-red-600 ">
+          {/* Top Content */}
+          <View className="gap-4">
+            {/* Search Bar Container - Grouped for a single unified shadow */}
+            <View
+              className="flex-row items-center bg-white shadow-2xl rounded-2xl"
+              style={{
+                elevation: 10, // Strong pop for Android
+                shadowColor: "#000", // iOS Shadow color
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 5,
+              }}
+            >
               <TouchableOpacity
-                activeOpacity={0.9}
-                className="items-center justify-center w-12 bg-white h-14 rounded-tl-2xl rounded-bl-2xl"
+                activeOpacity={0.8}
+                className="items-center justify-center w-12 h-16"
               >
-                <Ionicons name={"search-outline"} size={24} color="#f54900" />
+                <Ionicons name="search-outline" size={24} color="#f54900" />
               </TouchableOpacity>
+
               <TextInput
-                className="w-3/4 pl-0 text-xl bg-white h-14 "
+                className="flex-1 h-16 text-xl"
                 placeholder="Search..."
                 placeholderTextColor="#ccc"
               />
-              <TouchableOpacity
-                activeOpacity={0.9}
-                className="items-center justify-center w-12 bg-white h-14 rounded-tr-2xl rounded-br-2xl"
-              >
-                <Ionicons name={"options"} size={24} color="#f54900" />
-              </TouchableOpacity>
-            </SafeAreaView>
 
-            <SafeAreaView className="flex-row border-2 border-blue-600 ">
+              <TouchableOpacity
+                activeOpacity={0.8}
+                className="items-center justify-center w-12 h-16"
+              >
+                <Ionicons name="options" size={24} color="#f54900" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Filter Chips */}
+            <View className="flex-row">
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{
-                  paddingHorizontal: 1,
-                  gap: 10,
-                  paddingVertical: 0,
-                }}
+                contentContainerStyle={{ gap: 10 }}
               >
                 {filters.map((item) => {
                   const isActive = selectedFilter === item;
-
                   return (
                     <TouchableOpacity
+                      activeOpacity={0.9}
                       key={item}
                       onPress={() => setSelectedFilter(item)}
-                      // Dynamic Tailwind classes based on active state
-                      className={`px-6 py-2 rounded-full shadow-sm ${
-                        isActive ? "bg-orange-600" : "bg-white"
-                      }`}
+                      className={`px-6 py-2 rounded-full ${isActive ? "bg-orange-600" : "bg-white"}`}
+                      style={{
+                        elevation: 5,
+                        shadowColor: "#000",
+                        shadowOpacity: 0.2,
+                        shadowRadius: 3,
+                      }}
                     >
                       <Text
-                        className={`text-base font-semibold ${
-                          isActive ? "text-white" : "text-slate-600"
-                        }`}
+                        className={`text-base font-semibold ${isActive ? "text-white" : "text-slate-600"}`}
                       >
                         {item}
                       </Text>
@@ -101,23 +118,27 @@ export default function App() {
                   );
                 })}
               </ScrollView>
-            </SafeAreaView>
-          </SafeAreaView>
-          / / / Bottom Content / / /
-          <SafeAreaView className={"flex-col gap-5 border-2 h-auto"}>
+            </View>
+          </View>
+
+          {/* Bottom Content */}
+          <View className="flex-col gap-4 mb-4">
             <TouchableOpacity
               activeOpacity={0.7}
-              className="items-center self-end justify-center w-12 h-12 bg-white rounded-md shadow-xl"
+              className="items-center self-end justify-center bg-orange-500 rounded-full w-14 h-14"
+              style={{ elevation: 8, shadowOpacity: 0.3, shadowRadius: 4 }}
             >
-              <Ionicons name={"add"} size={28} color="#f54900" />
+              <Ionicons name="add" size={32} color="#ffff" />
             </TouchableOpacity>
+
             <TouchableOpacity
               activeOpacity={0.7}
-              className="items-center self-end justify-center w-12 h-12 bg-white rounded-full shadow-xl"
+              className="items-center self-end justify-center bg-white rounded-full w-14 h-14"
+              style={{ elevation: 8, shadowOpacity: 0.3, shadowRadius: 4 }}
             >
-              <Ionicons name={"locate"} size={22} color="#f54900" />
+              <Ionicons name="locate" size={26} color="#f54900" />
             </TouchableOpacity>
-          </SafeAreaView>
+          </View>
         </SafeAreaView>
       </>
     );
