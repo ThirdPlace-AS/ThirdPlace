@@ -19,14 +19,7 @@ const INITIAL_REGION = {
 
 export default function App() {
   const [selectedFilter, setSelectedFilter] = useState("Now");
-  const filters = [
-    "All",
-    "Now",
-    "Today",
-    "This week",
-    "This weekend",
-    "This month",
-  ];
+  const filters = ["All", "Now", "Today", "This week", "This weekend"];
 
   // iOS implementation
   if (Platform.OS === "ios") {
