@@ -49,10 +49,10 @@ interface GooglePlace {
 
 export default function App() {
   const mapRef = useRef<any>(null);
-  const [selectedFilter, setSelectedFilter] = useState("Now");
+  const [selectedTabs, setSelectedTabs] = useState<string[]>(["Discover"]);
+  const tabs = ["Discover", "Today", "Free", "Nearby", "Saved"];
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchActive, setIsSearchActive] = useState(false);
-  const filters = ["Discover", "Today", "Free", "Nearby", "Saved"];
   const [markers, setMarkers] = useState<GooglePlace[]>([]);
   const [selectedMarker, setSelectedMarker] = useState<GooglePlace | null>(
     null,
@@ -510,27 +510,55 @@ export default function App() {
                 </ScrollView>
               </Animated.View>
             ) : (
+              // Quick Tabs
               <View className="flex-row">
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
                   contentContainerStyle={{ gap: 10 }}
                 >
-                  {filters.map((item) => (
-                    <TouchableOpacity
-                      activeOpacity={0.9}
-                      key={item}
-                      onPress={() => setSelectedFilter(item)}
-                      className={`px-6 py-2 rounded-full ${selectedFilter === item ? "bg-orange-600" : "bg-white"}`}
-                      style={{ elevation: 5 }}
-                    >
-                      <Text
-                        className={`text-base font-semibold ${selectedFilter === item ? "text-white" : "text-slate-600"}`}
+                  {tabs.map((item) => {
+                    const isActive = selectedTabs.includes(item);
+                    return (
+                      <TouchableOpacity
+                        activeOpacity={0.9}
+                        key={item}
+                        onPress={() => {
+                          setSelectedTabs((prev) => {
+                            // 1. If user clicks "Discover"
+                            if (item === "Discover") {
+                              return isActive ? [] : ["Discover"];
+                            }
+
+                            // 2. If user clicks any other tab
+                            const withoutDiscover = prev.filter(
+                              (t) => t !== "Discover",
+                            );
+
+                            if (isActive) {
+                              // Remove the tab if it was already there
+                              return withoutDiscover.filter((t) => t !== item);
+                            } else {
+                              // Add the tab and ensure Discover is gone
+                              return [...withoutDiscover, item];
+                            }
+                          });
+                        }}
+                        className={`px-6 py-2 rounded-full ${
+                          isActive ? "bg-orange-600" : "bg-white"
+                        }`}
+                        style={{ elevation: 5 }}
                       >
-                        {item}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+                        <Text
+                          className={`text-base font-semibold ${
+                            isActive ? "text-white" : "text-slate-600"
+                          }`}
+                        >
+                          {item}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
                 </ScrollView>
               </View>
             )}
