@@ -52,7 +52,7 @@ export default function App() {
   const [selectedFilter, setSelectedFilter] = useState("Now");
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchActive, setIsSearchActive] = useState(false);
-  const filters = ["All", "Now", "Today", "This week", "This weekend"];
+  const filters = ["Discover", "Today", "Free", "Nearby", "Saved"];
   const [markers, setMarkers] = useState<GooglePlace[]>([]);
   const [selectedMarker, setSelectedMarker] = useState<GooglePlace | null>(
     null,
@@ -432,9 +432,9 @@ export default function App() {
                           key={item.place_id}
                           className="flex-row items-center p-4 border-b border-gray-100"
                           onPress={() => {
-                            setSearchQuery(""); // CHANGED: Clear text instead of setting item.name
-                            setIsSearchActive(false); // Close search mode
-                            setSelectedMarker(item); // Open the modal
+                            setSearchQuery("");
+                            setIsSearchActive(false);
+                            setSelectedMarker(item);
                             Keyboard.dismiss();
                             centerMapOn(
                               item.geometry.location.lat,
