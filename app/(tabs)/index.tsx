@@ -19,8 +19,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import "../../global.css";
 
-const GOOGLE_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY;
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+const GOOGLE_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY;
 const MY_MAP_ID = process.env.MY_MAP_ID;
 const INITIAL_REGION = {
   latitude: 59.9138,
@@ -47,10 +47,61 @@ interface GooglePlace {
   };
 }
 
+// Reusable section title component //
+const SectionTitle = ({ title, icon }: { title: string; icon: any }) => (
+  <View className="flex-row items-center mt-2 mb-4">
+    <Ionicons name={icon} size={18} color="#f54900" />
+    <Text className="ml-2 text-xs font-black tracking-widest text-gray-400 uppercase">
+      {title}
+    </Text>
+  </View>
+);
+
+// Reusable filter group component //
+const FilterGroup = ({
+  title,
+  items,
+  activeFilters,
+  onToggle,
+}: {
+  title: string;
+  items: string[];
+  activeFilters: string[];
+  onToggle: (item: string) => void;
+}) => (
+  <View className="mb-6">
+    <Text className="mb-3 text-sm font-bold text-gray-700">{title}</Text>
+    <View className="flex-row flex-wrap gap-2">
+      {items.map((item) => {
+        const isSelected = activeFilters.includes(item);
+        return (
+          <TouchableOpacity
+            key={item}
+            onPress={() => onToggle(item)}
+            className={`px-4 py-2 rounded-full border ${
+              isSelected
+                ? "bg-orange-600 border-orange-600"
+                : "bg-white border-gray-200"
+            }`}
+          >
+            <Text
+              className={`text-sm font-medium ${
+                isSelected ? "text-white" : "text-gray-600"
+              }`}
+            >
+              {item}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  </View>
+);
+
 export default function App() {
   const mapRef = useRef<any>(null);
   const [selectedTabs, setSelectedTabs] = useState<string[]>(["Discover"]);
-  const tabs = ["Discover", "Today", "Free", "Nearby", "Saved"];
+  const tabs = ["Discover", "Today", "Free", "Nearby", "Hosted", "Saved"];
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchActive, setIsSearchActive] = useState(false);
   const [markers, setMarkers] = useState<GooglePlace[]>([]);
@@ -64,6 +115,10 @@ export default function App() {
   const [userLocation, setUserLocation] = useState<any>(null);
   const searchInputRef = React.useRef<TextInput>(null);
   const [recentSearches, setRecentSearches] = React.useState<string[]>([]);
+  const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
+  const filterSlideAnim = useRef(new Animated.Value(SCREEN_WIDTH)).current;
+  const [activeFilters, setActiveFilters] = useState<string[]>([]);
+  const [isVerifiedOnly, setIsVerifiedOnly] = useState(false);
 
   // Move map to initial region on load
   const handleMapReady = () => {
@@ -274,6 +329,45 @@ export default function App() {
     saveRecents();
   }, [recentSearches]);
 
+  // Function to toggle modal
+  const toggleFilterModal = (open: boolean) => {
+    if (open) {
+      // Snaps the value to the right edge
+      filterSlideAnim.setValue(SCREEN_WIDTH);
+      // Mounts the component
+      setIsFilterModalVisible(true);
+    } else {
+      // Animates out
+      Animated.timing(filterSlideAnim, {
+        toValue: SCREEN_WIDTH,
+        duration: 300,
+        useNativeDriver: true,
+      }).start(() => setIsFilterModalVisible(false));
+    }
+  };
+
+  // Add this useEffect to trigger the "In" animation as soon as the modal mounts
+  useEffect(() => {
+    if (isFilterModalVisible) {
+      Animated.timing(filterSlideAnim, {
+        toValue: 0,
+        duration: 350,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [isFilterModalVisible, filterSlideAnim]); // Added filterSlideAnim here
+
+  const toggleFilter = (item: string) => {
+    setActiveFilters((prev) =>
+      prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item],
+    );
+  };
+
+  const resetFilters = () => {
+    setActiveFilters([]);
+    setIsVerifiedOnly(false);
+  };
+
   if (Platform.OS === "ios") {
     {
       /*  iOS Map  */
@@ -383,6 +477,7 @@ export default function App() {
               <TouchableOpacity
                 activeOpacity={0.8}
                 className="items-center justify-center w-12 h-16"
+                onPress={() => toggleFilterModal(true)}
               >
                 <Ionicons name="options" size={24} color="#f54900" />
               </TouchableOpacity>
@@ -652,6 +747,170 @@ export default function App() {
             </>
           )}
         </Animated.View>
+
+        {/* Filter Modal */}
+        {isFilterModalVisible && (
+          <Animated.View
+            style={{
+              transform: [{ translateX: filterSlideAnim }],
+              zIndex: 20000,
+            }}
+            className="absolute inset-0 bg-white"
+          >
+            <SafeAreaView className="flex-1">
+              {/* Header */}
+              <View className="flex-row items-center justify-between px-6 py-4 border-b border-gray-100">
+                <TouchableOpacity onPress={() => toggleFilterModal(false)}>
+                  <Ionicons name="close" size={28} color="#333" />
+                </TouchableOpacity>
+                <Text className="text-xl font-bold">Filters</Text>
+                <TouchableOpacity onPress={resetFilters}>
+                  <Text className="font-semibold text-orange-600">Reset</Text>
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView className="flex-1 px-6 pt-4">
+                {/* 🧭 CATEGORY FILTERS */}
+                <SectionTitle title="CATEGORY FILTERS" icon="options" />
+                <FilterGroup
+                  title="Food & Drink"
+                  items={[
+                    "Cafés",
+                    "Restaurants",
+                    "Street Food",
+                    "Bars",
+                    "Brunch Spots",
+                    "Hidden Gems",
+                  ]}
+                  activeFilters={activeFilters}
+                  onToggle={(item) => toggleFilter(item)}
+                />
+                <FilterGroup
+                  title="Activities"
+                  items={[
+                    "Outdoor",
+                    "Hikes",
+                    "Sports",
+                    "Creative Workshops",
+                    "Volunteering",
+                    "Live Music",
+                    "Classes & Learning",
+                    "Events",
+                    "Pop-ups",
+                    "Markets",
+                  ]}
+                  activeFilters={activeFilters}
+                  onToggle={(item) => toggleFilter(item)}
+                />
+                <FilterGroup
+                  title="Vibe-Based"
+                  items={[
+                    "Chill",
+                    "Social",
+                    "Adventurous",
+                    "Cozy",
+                    "Productive",
+                    "Cultural",
+                    "Romantic",
+                    "Budget-friendly",
+                    "Luxury",
+                  ]}
+                  activeFilters={activeFilters}
+                  onToggle={(item) => toggleFilter(item)}
+                />
+
+                <View className="h-px my-6 bg-gray-100" />
+
+                {/* 🧠 SMART FILTERS */}
+                <SectionTitle title="SMART FILTERS" icon="filter-outline" />
+                <FilterGroup
+                  title="Distance"
+                  items={["1 km", "5 km", "10 km", "Anywhere"]}
+                  activeFilters={activeFilters}
+                  onToggle={(item) => toggleFilter(item)}
+                />
+                <FilterGroup
+                  title="Price"
+                  items={["Free", "$", "$$", "$$$"]}
+                  activeFilters={activeFilters}
+                  onToggle={(item) => toggleFilter(item)}
+                />
+                <FilterGroup
+                  title="Group Size"
+                  items={[
+                    "Solo friendly",
+                    "2–4 people",
+                    "5–10 people",
+                    "Big groups",
+                  ]}
+                  activeFilters={activeFilters}
+                  onToggle={(item) => toggleFilter(item)}
+                />
+
+                <FilterGroup
+                  title="Age Range (for hosted experiences)"
+                  items={["All ages", "18+", "21+", "30+", "40+", "50+"]}
+                  activeFilters={activeFilters}
+                  onToggle={(item) => toggleFilter(item)}
+                />
+
+                <FilterGroup
+                  title="Difficulty (for hikes/sports)"
+                  items={["Easy", "Moderate", "Advanced"]}
+                  activeFilters={activeFilters}
+                  onToggle={(item) => toggleFilter(item)}
+                />
+
+                <FilterGroup
+                  title="Duration"
+                  items={["Under 1 hour", "1-3 hours", "Half day", "Full day"]}
+                  activeFilters={activeFilters}
+                  onToggle={(item) => toggleFilter(item)}
+                />
+
+                <FilterGroup
+                  title="Setting"
+                  items={["Indoor", "Outdoor", "Both"]}
+                  activeFilters={activeFilters}
+                  onToggle={(item) => toggleFilter(item)}
+                />
+
+                {/* Verified Only Toggle */}
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={() => setIsVerifiedOnly(!isVerifiedOnly)}
+                  className="flex-row items-center justify-between px-4 py-4 mt-4 mb-10 bg-gray-50 rounded-xl"
+                >
+                  <View>
+                    <Text className="font-bold text-gray-800">
+                      Verified Only
+                    </Text>
+                    <Text className="text-xs text-gray-500">
+                      Show only trusted ThirdPlaces
+                    </Text>
+                  </View>
+                  <View
+                    className={`w-12 h-6 rounded-full px-1 justify-center ${isVerifiedOnly ? "bg-orange-600 items-end" : "bg-gray-300 items-start"}`}
+                  >
+                    <View className="w-4 h-4 bg-white rounded-full shadow-sm" />
+                  </View>
+                </TouchableOpacity>
+              </ScrollView>
+
+              {/* Apply Button */}
+              <View className="p-6 border-t border-gray-100">
+                <TouchableOpacity
+                  onPress={() => toggleFilterModal(false)}
+                  className="items-center py-4 bg-orange-600 rounded-2xl"
+                >
+                  <Text className="text-lg font-bold text-white">
+                    Apply Filters
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </SafeAreaView>
+          </Animated.View>
+        )}
       </>
     );
   } else {
