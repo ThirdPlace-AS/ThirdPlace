@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   Animated,
   Dimensions,
+  Easing,
   Image,
   Keyboard,
   Platform,
@@ -332,15 +333,12 @@ export default function App() {
   // Function to toggle modal
   const toggleFilterModal = (open: boolean) => {
     if (open) {
-      // Snaps the value to the right edge
       filterSlideAnim.setValue(SCREEN_WIDTH);
-      // Mounts the component
       setIsFilterModalVisible(true);
     } else {
-      // Animates out
       Animated.timing(filterSlideAnim, {
         toValue: SCREEN_WIDTH,
-        duration: 300,
+        duration: 200,
         useNativeDriver: true,
       }).start(() => setIsFilterModalVisible(false));
     }
@@ -351,11 +349,12 @@ export default function App() {
     if (isFilterModalVisible) {
       Animated.timing(filterSlideAnim, {
         toValue: 0,
-        duration: 350,
+        duration: 200,
+        easing: Easing.out(Easing.quad),
         useNativeDriver: true,
       }).start();
     }
-  }, [isFilterModalVisible, filterSlideAnim]); // Added filterSlideAnim here
+  }, [isFilterModalVisible, filterSlideAnim]);
 
   const toggleFilter = (item: string) => {
     setActiveFilters((prev) =>
@@ -754,6 +753,7 @@ export default function App() {
             style={{
               transform: [{ translateX: filterSlideAnim }],
               zIndex: 20000,
+              width: SCREEN_WIDTH,
             }}
             className="absolute inset-0 bg-white"
           >
