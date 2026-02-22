@@ -28,6 +28,28 @@ const INITIAL_REGION = {
   longitude: 10.7387,
 };
 
+// Place this after your INITIAL_REGION constant
+const fetchAllPages = async (
+  url: string,
+  apiKey: string,
+  accumulatedResults: any[] = [],
+): Promise<any[]> => {
+  const response = await fetch(url);
+  const json = await response.json();
+  const currentResults = json.results || [];
+  const combinedResults = [...accumulatedResults, ...currentResults];
+
+  // Google allows up to 3 pages (60 results total)
+  if (json.next_page_token && combinedResults.length < 60) {
+    // IMPORTANT: Google's next_page_token isn't active for ~2 seconds after it's issued
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    const nextUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?pagetoken=${json.next_page_token}&key=${apiKey}`;
+    return fetchAllPages(nextUrl, apiKey, combinedResults);
+  }
+
+  return combinedResults;
+};
+
 interface GooglePlace {
   place_id: string;
   name: string;
@@ -35,6 +57,8 @@ interface GooglePlace {
   icon: string;
   rating?: number;
   user_ratings_total?: number;
+  price_level?: number;
+  types?: string[];
   photos?: {
     photo_reference: string;
     height: number;
@@ -98,6 +122,16 @@ const FilterGroup = ({
     </View>
   </View>
 );
+
+const CATEGORY_MAP: { [key: string]: string[] } = {
+  Cafés: ["cafe", "bakery"],
+  Restaurants: ["restaurant", "food"],
+  Bars: ["bar", "night_club"],
+  Outdoor: ["park", "campground", "zoo", "aquarium"],
+  Hikes: ["natural_feature", "park"],
+  Cultural: ["museum", "art_gallery", "church", "hindu_template"],
+  Markets: ["store", "supermarket", "clothing_store"],
+};
 
 export default function App() {
   const mapRef = useRef<any>(null);
@@ -175,31 +209,6 @@ export default function App() {
     [],
   );
 
-  // Create markers for Google Places
-  const mapMarkers = [
-    // Existing Google Places markers
-    ...(markers?.map((place) => ({
-      id: String(place.place_id),
-      coordinates: {
-        latitude: place.geometry.location.lat,
-        longitude: place.geometry.location.lng,
-      },
-      title: place.name,
-    })) || []),
-
-    // ADD THIS: User location marker
-    ...(userLocation
-      ? [
-          {
-            id: "user-pos",
-            coordinates: userLocation,
-            title: "You are here",
-            // You can even use a different color or icon here
-          },
-        ]
-      : []),
-  ];
-
   // Handle marker click
   const handleMarkerClick = async (event: any) => {
     const clickedId = event?.id || event?.nativeEvent?.id || event?.payload?.id;
@@ -244,22 +253,28 @@ export default function App() {
   useEffect(() => {
     const fetchPlaces = async () => {
       try {
-        const radius = 2000;
-        const type = "tourist_attraction";
-        const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${INITIAL_REGION.latitude},${INITIAL_REGION.longitude}&radius=${radius}&type=${type}&key=${GOOGLE_API_KEY}`;
+        setLoading(true);
+        // 'point_of_interest' is the widest possible category for "experiences"
+        const radius = 5000;
+        const baseUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${INITIAL_REGION.latitude},${INITIAL_REGION.longitude}&radius=${radius}&type=point_of_interest&key=${GOOGLE_API_KEY}`;
 
-        const response = await fetch(url);
-        const json = await response.json();
+        const allResults = await fetchAllPages(baseUrl, GOOGLE_API_KEY!);
 
-        if (json.results) {
-          setMarkers(json.results);
-        }
+        // Optional: Filter out non-experience types like 'gas_station' or 'post_office'
+        const filtered = allResults.filter(
+          (place) =>
+            !place.types.includes("gas_station") &&
+            !place.types.includes("post_office"),
+        );
+
+        setMarkers(filtered);
       } catch (error) {
-        console.error("Error fetching places:", error);
+        console.error("Error fetching all places:", error);
       } finally {
         setLoading(false);
       }
     };
+
     fetchPlaces();
   }, []);
 
@@ -367,15 +382,44 @@ export default function App() {
     setIsVerifiedOnly(false);
   };
 
-  if (Platform.OS === "ios") {
-    {
-      /*  iOS Map  */
+  // Filter markers based on activeFilters and isVerifiedOnly
+  const filteredMarkers = React.useMemo(() => {
+    let list = markers;
+
+    // 1. Filter by UI Tabs (Discover, Today, Free, etc.)
+    if (!selectedTabs.includes("Discover")) {
+      list = list.filter((marker) => {
+        if (selectedTabs.includes("Free")) return marker.price_level === 0;
+        // Add other tab logic here...
+        return true;
+      });
     }
+
+    // 2. Filter by the Modal Filters (Categories, Verified)
+    if (activeFilters.length > 0 || isVerifiedOnly) {
+      list = list.filter((marker) => {
+        if (isVerifiedOnly && (marker.rating || 0) < 4.5) return false;
+
+        if (activeFilters.length > 0) {
+          return activeFilters.some((filter) => {
+            const mappedTypes = CATEGORY_MAP[filter] || [];
+            return (
+              marker.types?.some((t: string) => mappedTypes.includes(t)) ||
+              marker.name.toLowerCase().includes(filter.toLowerCase())
+            );
+          });
+        }
+        return true;
+      });
+    }
+    return list;
+  }, [markers, activeFilters, isVerifiedOnly, selectedTabs]);
+
+  if (Platform.OS === "ios") {
+    /*  iOS Map  */
     return <AppleMaps.View style={{ flex: 1 }} />;
   } else if (Platform.OS === "android") {
-    {
-      /*  Android Map  */
-    }
+    /*  Android Map  */
     return (
       <>
         <GoogleMaps.View
@@ -389,13 +433,25 @@ export default function App() {
           }}
           style={{ flex: 1, position: "absolute", inset: 0 }}
           cameraPosition={{ coordinates: { ...INITIAL_REGION }, zoom: 14 }}
-          markers={mapMarkers}
           onMarkerClick={handleMarkerClick}
           uiSettings={{ zoomControlsEnabled: false, mapToolbarEnabled: false }}
           {...({ googleMapsMapId: MY_MAP_ID } as any)}
           properties={{
             isMyLocationEnabled: true,
           }}
+          markers={[
+            ...filteredMarkers.map((place) => ({
+              id: String(place.place_id),
+              coordinates: {
+                latitude: place.geometry.location.lat,
+                longitude: place.geometry.location.lng,
+              },
+              title: place.name,
+            })),
+            ...(userLocation
+              ? [{ id: "user-pos", coordinates: userLocation, title: "You" }]
+              : []),
+          ]}
         />
 
         <SafeAreaView
@@ -759,9 +815,9 @@ export default function App() {
           >
             <SafeAreaView className="flex-1">
               {/* Header */}
-              <View className="flex-row items-center justify-between px-6 py-4 border-b border-gray-100">
+              <View className="flex-row-reverse items-center justify-between px-6 py-4 border-b border-gray-100">
                 <TouchableOpacity onPress={() => toggleFilterModal(false)}>
-                  <Ionicons name="close" size={28} color="#333" />
+                  <Ionicons name="close" size={25} color="#333" />
                 </TouchableOpacity>
                 <Text className="text-xl font-bold">Filters</Text>
                 <TouchableOpacity onPress={resetFilters}>
@@ -769,6 +825,7 @@ export default function App() {
                 </TouchableOpacity>
               </View>
 
+              {/* Filters container */}
               <ScrollView className="flex-1 px-6 pt-4">
                 {/* 🧭 CATEGORY FILTERS */}
                 <SectionTitle title="CATEGORY FILTERS" icon="options" />
@@ -803,7 +860,7 @@ export default function App() {
                   onToggle={(item) => toggleFilter(item)}
                 />
                 <FilterGroup
-                  title="Vibe-Based"
+                  title="Vibe"
                   items={[
                     "Chill",
                     "Social",
@@ -820,7 +877,6 @@ export default function App() {
                 />
 
                 <View className="h-px my-6 bg-gray-100" />
-
                 {/* 🧠 SMART FILTERS */}
                 <SectionTitle title="SMART FILTERS" icon="filter-outline" />
                 <FilterGroup
@@ -898,13 +954,13 @@ export default function App() {
               </ScrollView>
 
               {/* Apply Button */}
-              <View className="p-6 border-t border-gray-100">
+              <View className="px-6 py-4 bg-white border-t border-gray-100">
                 <TouchableOpacity
                   onPress={() => toggleFilterModal(false)}
-                  className="items-center py-4 bg-orange-600 rounded-2xl"
+                  className="items-center py-4 bg-orange-600 shadow-lg rounded-2xl"
                 >
                   <Text className="text-lg font-bold text-white">
-                    Apply Filters
+                    Apply Filters ({filteredMarkers.length} results)
                   </Text>
                 </TouchableOpacity>
               </View>
