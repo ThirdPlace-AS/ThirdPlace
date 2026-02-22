@@ -713,6 +713,7 @@ export default function App() {
               </View>
             )}
           </View>
+
           {/*bottom container for add marker and locate buttons */}
           {!isSearchActive && (
             <View className="flex-col gap-4 mb-4">
@@ -734,6 +735,7 @@ export default function App() {
             </View>
           )}
         </SafeAreaView>
+
         {/* Slide-up panel for selected marker details */}
         <Animated.View
           className="absolute bottom-0 w-full overflow-hidden bg-white rounded-t-3xl"
