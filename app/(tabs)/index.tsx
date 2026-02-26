@@ -130,7 +130,6 @@ const CATEGORY_MAP: { [key: string]: string[] } = {
   Outdoor: ["park", "campground", "zoo", "aquarium"],
   Hikes: ["natural_feature", "park"],
   Cultural: ["museum", "art_gallery", "church", "hindu_template"],
-  Markets: ["store", "supermarket", "clothing_store"],
 };
 
 export default function App() {
@@ -830,6 +829,10 @@ export default function App() {
               {/* Filters container */}
               <ScrollView className="flex-1 px-6 pt-4">
                 {/* 🧭 CATEGORY FILTERS */}
+                <ActiveFiltersSummary
+                  filters={activeFilters}
+                  onRemove={toggleFilter}
+                />
                 <SectionTitle title="CATEGORY FILTERS" icon="options" />
                 <FilterGroup
                   title="Food & Drink"
