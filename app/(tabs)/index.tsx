@@ -10,6 +10,7 @@ import {
   Easing,
   Image,
   Keyboard,
+  LayoutAnimation,
   Platform,
   ScrollView,
   Text,
@@ -122,6 +123,48 @@ const FilterGroup = ({
     </View>
   </View>
 );
+
+// 3. Selection Summary Component
+const ActiveFiltersSummary = ({
+  filters,
+  onRemove,
+}: {
+  filters: string[];
+  onRemove: (item: string) => void;
+}) => {
+  if (filters.length === 0) return null;
+
+  return (
+    <View className="mb-6">
+      <Text className="mb-2 text-xs font-bold tracking-widest text-gray-400 uppercase">
+        Active Selections ({filters.length})
+      </Text>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        className="flex-row"
+      >
+        {filters.map((filter) => (
+          <TouchableOpacity
+            key={filter}
+            onPress={() => {
+              LayoutAnimation.configureNext(
+                LayoutAnimation.Presets.easeInEaseOut,
+              );
+              onRemove(filter);
+            }}
+            className="flex-row items-center bg-orange-100 border border-orange-200 px-3 py-1.5 rounded-full mr-2"
+          >
+            <Text className="mr-1 text-sm font-medium text-orange-700">
+              {filter}
+            </Text>
+            <Ionicons name="close-circle" size={14} color="#f54900" />
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+    </View>
+  );
+};
 
 const CATEGORY_MAP: { [key: string]: string[] } = {
   Cafés: ["cafe", "bakery"],
