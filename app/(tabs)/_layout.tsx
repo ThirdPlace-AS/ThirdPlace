@@ -5,6 +5,7 @@ import "../../global.css";
 export default function TabsLayout() {
   return (
     <Tabs
+      detachInactiveScreens={false}
       screenOptions={{
         tabBarActiveTintColor: "#f54900",
         headerStyle: { backgroundColor: "#0f172b" },
@@ -28,13 +29,13 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="chat"
+        name="swipe"
         options={{
-          headerTitle: "Chat",
-          title: "Chat",
+          headerTitle: "Swipe",
+          title: "Swipe",
           tabBarIcon: ({ focused, color }) => (
             <Ionicons
-              name={focused ? "chatbubbles-sharp" : "chatbubbles-outline"}
+              name={focused ? "albums" : "albums-outline"}
               size={30}
               color={color}
             />
@@ -55,14 +56,15 @@ export default function TabsLayout() {
           ),
         }}
       />
+
       <Tabs.Screen
-        name="swipe"
+        name="chat"
         options={{
-          headerTitle: "Swipe",
-          title: "Swipe",
+          headerTitle: "Chat",
+          title: "Chat",
           tabBarIcon: ({ focused, color }) => (
             <Ionicons
-              name={focused ? "albums" : "albums-outline"}
+              name={focused ? "chatbubbles-sharp" : "chatbubbles-outline"}
               size={30}
               color={color}
             />
