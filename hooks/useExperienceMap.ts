@@ -606,7 +606,7 @@ export const useExperienceMap = () => {
       seedPlaces,
     }: {
       requestId: number;
-      queryPoints: Array<{ latitude: number; longitude: number }>;
+      queryPoints: { latitude: number; longitude: number }[];
       nextBounds: MapBounds;
       seedPlaces: GooglePlace[];
     }) => {
@@ -794,7 +794,11 @@ export const useExperienceMap = () => {
         if (loadingFailSafe) {
           clearTimeout(loadingFailSafe);
         }
-        if (isMountedRef.current && !isMoveFetch && loadingRequestIdRef.current === requestId) {
+        if (
+          isMountedRef.current &&
+          !isMoveFetch &&
+          loadingRequestIdRef.current === requestId
+        ) {
           loadingRequestIdRef.current = null;
           setIsLoadingPlaces(false);
         }
