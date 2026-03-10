@@ -8,19 +8,19 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.thirdplaceofficial.ThirdPlace",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "ThirdPlace uses your location to show nearby experiences.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "ThirdPlace uses your location to show nearby experiences."
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE"
+        "backgroundColor": "#0f172b"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "config": {
-        "googleMaps": {
-          "apiKey": "AIzaSyBJi9jYlk8rusC0Wn5HfO3tBHFIk-p927U"
-        }
-      },
       "permissions": [
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION"
@@ -34,17 +34,11 @@
     "plugins": [
       "expo-font",
       "expo-router",
-      [
-        "expo-maps",
-        {
-          "requestLocationPermission": true,
-          "locationPermission": "Allow $(PRODUCT_NAME) to use your location"
-        }
-      ],
+      ["@rnmapbox/maps"],
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
+          "locationAlwaysAndWhenInUsePermission": "Allow ThirdPlace to use your location."
         }
       ]
     ],
