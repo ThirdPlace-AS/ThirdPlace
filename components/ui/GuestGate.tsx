@@ -24,28 +24,27 @@
 // the sheet feels native — no JS-thread jank on the modal entry.
 // ============================================================
 
-import React, { useState, useCallback, type ReactNode } from "react";
+import { COLOURS } from "@/lib/constants";
+import { router } from "expo-router";
+import React, { useCallback, useState, type ReactNode } from "react";
 import {
-  View,
+  Modal,
+  Platform,
+  Pressable,
+  StyleSheet,
   Text,
   TouchableOpacity,
-  Modal,
-  Pressable,
-  Platform,
+  View,
 } from "react-native";
 import Animated, {
-  useSharedValue,
   useAnimatedStyle,
+  useSharedValue,
   withSpring,
   withTiming,
-  runOnJS,
 } from "react-native-reanimated";
-import { router } from "expo-router";
-import { useGuest } from "@/context/GuestContext";
-import { COLOURS } from "@/lib/constants";
 
 // ─── Inline import needed for the overlay ───────────────────
-import { StyleSheet } from 'react-native';
+import { useGuest } from "@/context/GuestContext";
 
 // ─── Feature-specific messaging ─────────────────────────────
 // Each gated feature gets a tailored headline and subtext so
@@ -378,7 +377,10 @@ export function useGuestGate(featureName: string) {
   const hideGate = useCallback(() => setSheetVisible(false), []);
 
   const GateSheet = useCallback(
- 
+    () => (
+      <GuestGateSheet
+        visible={sheetVisible}
+        featureName={featureName}
         onClose={hideGate}
       />
     ),
