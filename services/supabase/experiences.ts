@@ -21,8 +21,42 @@ export async function fetchNearbyExperiences(
     p_latitude:      latitude,
     p_radius_metres: radiusMetres,
   });
-  if (error) throw new Error(`[Experiences] Fetch failed: ${error.message}`);
-  return (data ?? []) as Experience[];
+  if (!error) return (data ?? []) as Experience[];
+
+  // Fallback: simple bounding-box query when RPC is unavailable.
+  const latDelta = radiusMetres / 111_320;
+  const lngDelta =
+    radiusMetres / Math.max(1, 111_320 * Math.cos((latitude * Math.PI) / 180));
+
+  const { data: fallback, error: fallbackError } = await supabase
+    .from("experiences_with_counts")
+    .select("*")
+    .gte("latitude", latitude - latDelta)
+    .lte("latitude", latitude + latDelta)
+    .gte("longitude", longitude - lngDelta)
+    .lte("longitude", longitude + lngDelta)
+    .limit(200);
+
+  if (!fallbackError) {
+    return (fallback ?? []) as Experience[];
+  }
+
+  const { data: rawFallback, error: rawError } = await supabase
+    .from("experiences")
+    .select("*")
+    .gte("latitude", latitude - latDelta)
+    .lte("latitude", latitude + latDelta)
+    .gte("longitude", longitude - lngDelta)
+    .lte("longitude", longitude + lngDelta)
+    .limit(200);
+
+  if (rawError) {
+    throw new Error(
+      `[Experiences] Fetch failed: ${error.message}; fallback failed: ${fallbackError.message}; raw fallback failed: ${rawError.message}`,
+    );
+  }
+
+  return (rawFallback ?? []) as Experience[];
 }
 
 // ── Fetch nearby OSM places via PostGIS RPC ───────────────────
