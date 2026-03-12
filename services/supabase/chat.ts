@@ -5,6 +5,11 @@
 import { ChatRoom, Message } from "@/types";
 import { RealtimeChannel } from "@supabase/supabase-js";
 import { supabase } from "./client";
+
+const normalizeMessage = (row: any): Message => ({
+  ...row,
+  sender: Array.isArray(row?.sender) ? row.sender[0] : row?.sender,
+});
  
 export async function fetchMessages(experienceId: string): Promise<Message[]> {
   const { data, error } = await supabase
@@ -17,7 +22,7 @@ export async function fetchMessages(experienceId: string): Promise<Message[]> {
     .order("created_at", { ascending: true })
     .limit(100);
   if (error) throw new Error(`[Chat] Fetch failed: ${error.message}`);
-  return (data ?? []) as Message[];
+  return (data ?? []).map(normalizeMessage);
 }
  
 export async function sendMessage(
@@ -36,7 +41,7 @@ export async function sendMessage(
     `)
     .single();
   if (error) throw new Error(`[Chat] Send failed: ${error.message}`);
-  return data as Message;
+  return normalizeMessage(data);
 }
  
 export function subscribeToMessages(

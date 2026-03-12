@@ -3,6 +3,7 @@
 // Renders the visible portion of the card stack (top 3 cards).
 // Connects useSwipeDeck hook state to SwipeCard components.
 // ─────────────────────────────────────────────────────────────
+import React from "react";
 import { SWIPE } from "@/lib/constants";
 import type { Experience } from "@/types/experience";
 import { View } from "react-native";

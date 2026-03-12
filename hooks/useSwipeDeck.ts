@@ -37,8 +37,8 @@ export function useSwipeDeck(): SwipeDeckState & SwipeDeckActions {
     (async () => {
       try {
         const { status } = await ExpoLocation.requestForegroundPermissionsAsync();
-        let lat = MAP_CONFIG.DEFAULT_LAT;
-        let lng = MAP_CONFIG.DEFAULT_LNG;
+        let lat: number = MAP_CONFIG.DEFAULT_LAT;
+        let lng: number = MAP_CONFIG.DEFAULT_LNG;
         if (status === "granted") {
           const loc = await ExpoLocation.getCurrentPositionAsync({});
           lat = loc.coords.latitude;

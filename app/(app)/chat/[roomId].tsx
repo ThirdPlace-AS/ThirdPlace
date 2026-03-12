@@ -7,7 +7,7 @@ import { useChatRoom } from "@/hooks/useChat";
 import { COLOURS } from "@/lib/constants";
 import { supabase } from "@/services/supabase/client";
 import { Ionicons } from "@expo/vector-icons";
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
     ActivityIndicator,

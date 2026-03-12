@@ -4,7 +4,7 @@
 // ─────────────────────────────────────────────────────────────
 import { supabase } from "@/services/supabase/client";
 import type { AuthError, Session, User } from "@supabase/supabase-js";
-import { makeRedirectUri } from 'expo-linking';
+import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
 import { useCallback, useEffect, useState } from "react";
  
@@ -67,7 +67,9 @@ export function useAuth(): AuthState & AuthActions {
  
   const signInWithOAuth = useCallback(async (provider: "google" | "facebook") => {
     setError(null);
-    const redirectTo = makeRedirectUri({ scheme: "thirdplace" });
+    const redirectTo = Linking.createURL("auth/callback", {
+      scheme: "thirdplace",
+    });
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider,
       options: { redirectTo, skipBrowserRedirect: true },

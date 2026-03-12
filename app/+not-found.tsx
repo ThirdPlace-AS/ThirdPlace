@@ -8,7 +8,7 @@ export default function NotFoundScreen() {
       <Text className="mb-2 text-xl font-bold text-red-600">
         Page not found!
       </Text>
-      <Link href="/(tabs)">
+      <Link href="/map">
         <Text className="text-xl font-bold text-green-600">
           Go back to Home Screen
         </Text>

@@ -2,6 +2,7 @@
 // components/ui/Tag.tsx
 // Category badge — used on cards, list rows, and detail sheets.
 // ─────────────────────────────────────────────────────────────
+import React from "react";
 import { CATEGORY_META, COLOURS } from "@/lib/constants";
 import { Ionicons } from "@expo/vector-icons";
 import { Text, View } from "react-native";

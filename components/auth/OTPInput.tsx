@@ -2,8 +2,8 @@
 // components/auth/OTPInput.tsx
 // 6-box OTP digit input. Auto-advances focus, auto-submits on fill.
 // ─────────────────────────────────────────────────────────────
+import React, { useRef } from "react";
 import { COLOURS } from "@/lib/constants";
-import { useRef } from "react";
 import { TextInput, View } from "react-native";
 
 interface OTPInputProps {

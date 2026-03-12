@@ -1,6 +1,7 @@
 // ─────────────────────────────────────────────────────────────
 // components/ui/ErrorFallback.tsx
 // ─────────────────────────────────────────────────────────────
+import React from "react";
 import { COLOURS } from "@/lib/constants";
 import { Ionicons } from "@expo/vector-icons";
 import { Text, TouchableOpacity, View } from "react-native";

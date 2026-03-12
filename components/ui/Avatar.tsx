@@ -1,6 +1,7 @@
 // ─────────────────────────────────────────────────────────────
 // components/ui/Avatar.tsx
 // ─────────────────────────────────────────────────────────────
+import React from "react";
 import { COLOURS } from "@/lib/constants";
 import { Image, Text, View } from "react-native";
 

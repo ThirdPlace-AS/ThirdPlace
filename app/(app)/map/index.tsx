@@ -10,9 +10,11 @@ import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ErrorFallback } from "@/components/ui/ErrorFallback";
-import { useFriendLocations } from "@/hooks/useChat";
-import { OSLO_DEFAULT, useExperiences, useLocation } from "@/hooks/useLocation"; // re-exported below
+import { useFriendLocations } from "@/hooks/useFriendLocation";
+import { useExperiences } from "@/hooks/useExperiences";
+import { OSLO_DEFAULT, useLocation } from "@/hooks/useLocation";
 import { CAMERA_DEBOUNCE_MS, COLOURS, MAP_CONFIG } from "@/lib/constants";
+import type { FriendLocation } from "@/types";
 
 // NOTE: useExperiences is exported from hooks/useLocation.ts
 // (both hooks are defined in that file). Import path is correct.
@@ -61,7 +63,7 @@ export default function MapScreen() {
 
   const friendsGeoJSON = {
     type: "FeatureCollection" as const,
-    features: friends.map((f) => ({
+    features: friends.map((f: FriendLocation) => ({
       type: "Feature" as const,
       geometry: {
         type: "Point" as const,
@@ -116,7 +118,7 @@ export default function MapScreen() {
           cluster
           clusterRadius={50}
           clusterMaxZoomLevel={MAP_CONFIG.CLUSTER_ZOOM}
-          onPress={(e) => {
+          onPress={(e: any) => {
             const feature = e.features[0];
             const id = feature?.properties?.id;
             if (id)

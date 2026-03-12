@@ -2,6 +2,7 @@
 // components/chat/ChatInput.tsx
 // Animated input bar. Send button pulses in when text is present.
 // ─────────────────────────────────────────────────────────────
+import React from "react";
 import { ANIMATION, COLOURS } from "@/lib/constants";
 import { Ionicons } from "@expo/vector-icons";
 import {

@@ -34,8 +34,8 @@ export default function CreateScreen() {
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState<ExperienceCategory | null>(null);
   const [address, setAddress] = useState("");
-  const [latitude, setLatitude] = useState(MAP_CONFIG.DEFAULT_LAT);
-  const [longitude, setLongitude] = useState(MAP_CONFIG.DEFAULT_LNG);
+  const [latitude, setLatitude] = useState<number>(MAP_CONFIG.DEFAULT_LAT);
+  const [longitude, setLongitude] = useState<number>(MAP_CONFIG.DEFAULT_LNG);
   const [maxPeople, setMaxPeople] = useState("");
   const [startsAt, setStartsAt] = useState(new Date(Date.now() + 3_600_000));
   const [datePickerOpen, setDatePickerOpen] = useState<DateField>(null);
@@ -66,8 +66,8 @@ export default function CreateScreen() {
 
     if (!result.success) {
       const errs: Record<string, string> = {};
-      result.error.errors.forEach((e) => {
-        if (e.path[0]) errs[String(e.path[0])] = e.message;
+      result.error.issues.forEach((issue) => {
+        if (issue.path[0]) errs[String(issue.path[0])] = issue.message;
       });
       setFieldErrors(errs);
       return;

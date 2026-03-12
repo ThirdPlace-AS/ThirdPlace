@@ -3,7 +3,7 @@
 // ─────────────────────────────────────────────────────────────
 import { CARD_H } from "@/components/discover/SwipeCard";
 import { SwipeDeck } from "@/components/discover/SwipeDeck";
-import { useSwipeDeck } from "@/hooks/useChat"; // re-exported from hooks file
+import { useSwipeDeck } from "@/hooks/useSwipeDeck";
 import { ANIMATION, COLOURS } from "@/lib/constants";
 import type { Experience } from "@/types/experience";
 import { Ionicons } from "@expo/vector-icons";

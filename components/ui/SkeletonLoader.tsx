@@ -2,6 +2,7 @@
 // components/ui/SkeletonLoader.tsx
 // Animated placeholder for loading states.
 // ─────────────────────────────────────────────────────────────
+import React from "react";
 import { COLOURS } from "@/lib/constants";
 import Animated, {
   interpolateColor,

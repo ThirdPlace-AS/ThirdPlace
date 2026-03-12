@@ -263,5 +263,5 @@ export function SignUpScreen() {
   );
 }
 
-export { SignUpScreen as default } from "./sign-up";
+export default SignUpScreen;
 
