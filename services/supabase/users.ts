@@ -1,5 +1,8 @@
 // ─────────────────────────────────────────────────────────────
 // services/supabase/users.ts
+
+import { supabase } from "./client";
+
 // ─────────────────────────────────────────────────────────────
 export async function fetchProfile(userId: string) {
   const { data, error } = await supabase
@@ -10,7 +13,7 @@ export async function fetchProfile(userId: string) {
   if (error) throw new Error(`[Users] Fetch failed: ${error.message}`);
   return data;
 }
-
+ 
 export async function updateProfile(
   userId:  string,
   updates: { display_name?: string; bio?: string; avatar_url?: string },
@@ -21,7 +24,7 @@ export async function updateProfile(
     .eq("id", userId);
   if (error) throw new Error(`[Users] Update failed: ${error.message}`);
 }
-
+ 
 export async function fetchParticipantCounts(userId: string) {
   const [joined, created] = await Promise.all([
     supabase

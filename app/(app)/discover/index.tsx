@@ -1,24 +1,25 @@
 // ─────────────────────────────────────────────────────────────
 // app/(app)/discover/index.tsx  — Swipe screen (pure JSX)
 // ─────────────────────────────────────────────────────────────
-import { CARD_H, SwipeDeck } from "@/components/discover/SwipeCard";
+import { CARD_H } from "@/components/discover/SwipeCard";
+import { SwipeDeck } from "@/components/discover/SwipeDeck";
 import { useSwipeDeck } from "@/hooks/useChat"; // re-exported from hooks file
 import { ANIMATION, COLOURS } from "@/lib/constants";
-import type { Experience } from "@/types";
+import type { Experience } from "@/types/experience";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect } from "react";
 import {
-    ActivityIndicator,
-    Dimensions,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Dimensions,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Animated, {
-    useAnimatedStyle,
-    useSharedValue,
-    withSpring,
-    withTiming,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -350,7 +351,7 @@ export default function DiscoverScreen() {
               textAlign: "center",
             }}
           >
-            You've seen everything nearby
+            You&apos;ve seen everything nearby
           </Text>
           <Text
             style={{

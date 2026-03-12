@@ -47,7 +47,7 @@ export const MAP_CONFIG = {
   REFETCH_THRESH_M:  1000,      // Move this far before re-fetching
   OSM_PADDING_DEG:   0.05,      // Degrees padding for OSM bbox
   CLUSTER_ZOOM:      14,        // Zoom above which clustering is disabled
-  MAP_STYLE:         "mapbox://styles/mapbox/light-v11",
+  MAP_STYLE:         "mapbox://styles/thirdplace/cmmi50o1q002d01qw5mq0a2qh",
 } as const;
 
 export const ANIMATION = {

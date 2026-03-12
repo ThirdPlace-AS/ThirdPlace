@@ -20,7 +20,6 @@ function AuthGate() {
     if (!session && !inAuth) router.replace("/(auth)/welcome");
     if (session && inAuth) router.replace("/(app)/map");
   }, [session, isLoading, segments]);
-
   return null;
 }
 

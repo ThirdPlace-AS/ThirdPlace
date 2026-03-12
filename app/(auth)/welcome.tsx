@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────
 // app/(auth)/welcome.tsx
 // ─────────────────────────────────────────────────────────────
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
 import { COLOURS } from "@/lib/constants";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";

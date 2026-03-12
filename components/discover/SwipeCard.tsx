@@ -3,20 +3,20 @@
 // Pure UI component. Owns animation values and gesture handler.
 // All business logic (what happens on swipe) comes in via props.
 // ─────────────────────────────────────────────────────────────
-import { Tag } from "@/components/ui";
+import { Tag } from "@/components/ui/Tag";
 import { ANIMATION, CATEGORY_META, COLOURS, SWIPE } from "@/lib/constants";
-import type { Experience } from "@/types";
+import type { Experience } from "@/types/experience";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Dimensions, Image, StyleSheet, Text, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
-    interpolate,
-    runOnJS,
-    useAnimatedStyle,
-    useSharedValue,
-    withSpring,
-    withTiming,
+  interpolate,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
 } from "react-native-reanimated";
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");

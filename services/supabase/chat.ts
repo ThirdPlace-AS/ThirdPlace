@@ -1,10 +1,11 @@
 // ─────────────────────────────────────────────────────────────
 // services/supabase/chat.ts
 // ─────────────────────────────────────────────────────────────
-import type { ChatRoom, Message } from "@/types";
-import type { RealtimeChannel } from "@supabase/supabase-js";
-import { supabase } from "./client";
 
+import { ChatRoom, Message } from "@/types";
+import { RealtimeChannel } from "@supabase/supabase-js";
+import { supabase } from "./client";
+ 
 export async function fetchMessages(experienceId: string): Promise<Message[]> {
   const { data, error } = await supabase
     .from("messages")
@@ -18,14 +19,14 @@ export async function fetchMessages(experienceId: string): Promise<Message[]> {
   if (error) throw new Error(`[Chat] Fetch failed: ${error.message}`);
   return (data ?? []) as Message[];
 }
-
+ 
 export async function sendMessage(
   experienceId: string,
   content:      string,
 ): Promise<Message> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("[Chat] Must be authenticated");
-
+ 
   const { data, error } = await supabase
     .from("messages")
     .insert({ experience_id: experienceId, sender_id: user.id, content })
@@ -37,7 +38,7 @@ export async function sendMessage(
   if (error) throw new Error(`[Chat] Send failed: ${error.message}`);
   return data as Message;
 }
-
+ 
 export function subscribeToMessages(
   experienceId: string,
   onMessage:    (msg: Message) => void,
@@ -63,11 +64,11 @@ export function subscribeToMessages(
     )
     .subscribe();
 }
-
+ 
 export async function fetchChatRooms(): Promise<ChatRoom[]> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return [];
-
+ 
   const { data, error } = await supabase
     .from("experience_participants")
     .select(`
@@ -78,9 +79,9 @@ export async function fetchChatRooms(): Promise<ChatRoom[]> {
     `)
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
-
+ 
   if (error) throw new Error(error.message);
-
+ 
   return (data ?? [])
     .map((row: any) => {
       const exp  = row.experience;
@@ -99,3 +100,4 @@ export async function fetchChatRooms(): Promise<ChatRoom[]> {
       (b.lastMessageAt ?? "").localeCompare(a.lastMessageAt ?? ""),
     );
 }
+ 

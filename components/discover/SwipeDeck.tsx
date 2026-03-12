@@ -4,7 +4,7 @@
 // Connects useSwipeDeck hook state to SwipeCard components.
 // ─────────────────────────────────────────────────────────────
 import { SWIPE } from "@/lib/constants";
-import type { Experience } from "@/types";
+import type { Experience } from "@/types/experience";
 import { View } from "react-native";
 import { SwipeCard } from "./SwipeCard";
 

@@ -9,7 +9,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { ErrorFallback } from "@/components/ui";
+import { ErrorFallback } from "@/components/ui/ErrorFallback";
 import { useFriendLocations } from "@/hooks/useChat";
 import { OSLO_DEFAULT, useExperiences, useLocation } from "@/hooks/useLocation"; // re-exported below
 import { CAMERA_DEBOUNCE_MS, COLOURS, MAP_CONFIG } from "@/lib/constants";

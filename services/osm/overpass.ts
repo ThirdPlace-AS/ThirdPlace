@@ -6,7 +6,7 @@
 import { buildOSMBbox } from "@/lib/geo";
 import { supabase } from "@/services/supabase/client";
 import type { Coordinates } from "@/types";
-
+ 
 export async function triggerOSMCache(coords: Coordinates): Promise<void> {
   // Fire-and-forget — we don't await in the critical path.
   // The Edge Function returns instantly on a cache hit.

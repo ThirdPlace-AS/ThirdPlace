@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────
 // components/chat/MessageBubble.tsx
 // ─────────────────────────────────────────────────────────────
-import { Avatar } from "@/components/ui";
+import { Avatar } from "@/components/ui/Avatar";
 import { COLOURS } from "@/lib/constants";
 import type { Message } from "@/types";
 import { Ionicons } from "@expo/vector-icons";

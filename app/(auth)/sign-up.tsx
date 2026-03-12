@@ -1,5 +1,26 @@
 // ─────────────────────────────────────────────────────────────
 // app/(auth)/sign-up.tsx
+
+import { SocialAuthButton } from "@/components/auth/SocialAuthButton";
+import { Button } from "@/components/ui/Button";
+import { useAuth } from "@/hooks/useAuth";
+import { COLOURS } from "@/lib/constants";
+import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import { useState } from "react";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+
+import Animated, { FadeInDown } from "react-native-reanimated";
+import { SafeAreaView } from "react-native-safe-area-context";
+
 // ─────────────────────────────────────────────────────────────
 export function SignUpScreen() {
   const {

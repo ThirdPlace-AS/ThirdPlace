@@ -1,19 +1,25 @@
 // ─────────────────────────────────────────────────────────────
 // app/(auth)/sign-in.tsx
 // ─────────────────────────────────────────────────────────────
+import { OTPInput } from "@/components/auth/OTPInput";
+import { SocialAuthButton } from "@/components/auth/SocialAuthButton";
+import { Button } from "@/components/ui/Button";
+import { useAuth } from "@/hooks/useAuth";
+import { COLOURS } from "@/lib/constants";
+import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import { useState } from "react";
-import {,dAvoidingView,
-
+import {
+  KeyboardAvoidingView,
   Platform,
   ScrollView,
-  TextInput,,react-nativ
-
-import { TouchableOpacity } from "react-native";
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
-import { useAuth } from "@/hooks/useAuth";
-import { SocialAuthButton } from "@/components/auth/SocialAuthButton";
-import { OTPInput } from "@/components/auth/SocialAuthButton";
-import { Button, ErrorBanner } from "@/components/ui";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type Mode = "email" | "phone";
 

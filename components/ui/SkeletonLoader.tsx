@@ -4,11 +4,11 @@
 // ─────────────────────────────────────────────────────────────
 import { COLOURS } from "@/lib/constants";
 import Animated, {
-    interpolateColor,
-    useAnimatedStyle,
-    useSharedValue,
-    withRepeat,
-    withTiming,
+  interpolateColor,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
 } from "react-native-reanimated";
 
 interface SkeletonProps {

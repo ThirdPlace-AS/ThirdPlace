@@ -4,10 +4,10 @@
 import { COLOURS } from "@/lib/constants";
 import React from "react";
 import {
-    ActivityIndicator,
-    Text,
-    TouchableOpacity,
-    type TouchableOpacityProps,
+  ActivityIndicator,
+  Text,
+  TouchableOpacity,
+  type TouchableOpacityProps,
 } from "react-native";
 
 interface ButtonProps extends TouchableOpacityProps {

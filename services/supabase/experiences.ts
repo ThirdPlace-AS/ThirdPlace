@@ -4,7 +4,8 @@
 // Hooks call these — screens never import supabase directly.
 // ─────────────────────────────────────────────────────────────
 import { toPostGISPoint } from "@/lib/geo";
-import type { CreateExperiencePayload, Experience, OSMPlace } from "@/types";
+import { OSMPlace } from "@/types";
+import { CreateExperiencePayload, Experience } from "@/types/experience";
 import { supabase } from "./client";
 
 // ── Fetch nearby experiences via PostGIS RPC ──────────────────

@@ -5,16 +5,16 @@
 import { ANIMATION, COLOURS } from "@/lib/constants";
 import { Ionicons } from "@expo/vector-icons";
 import {
-    ActivityIndicator,
-    Platform,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Platform,
+  TextInputBase,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Animated, {
-    useAnimatedStyle,
-    useSharedValue,
-    withSpring,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
 } from "react-native-reanimated";
 
 interface ChatInputProps {
@@ -59,7 +59,7 @@ export const ChatInput = React.memo(
           gap: 10,
         }}
       >
-        <TextInput
+        <TextInputBase
           style={{
             flex: 1,
             backgroundColor: COLOURS.surfaceAlt,

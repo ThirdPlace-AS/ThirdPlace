@@ -1,9 +1,12 @@
+
 // ─────────────────────────────────────────────────────────────
 // services/supabase/locations.ts
 // ─────────────────────────────────────────────────────────────
 import { parsePostGISPoint, toPostGISPoint } from "@/lib/geo";
 import type { FriendLocation } from "@/types";
-
+import { RealtimeChannel } from "@supabase/supabase-js";
+import { supabase } from "./client";
+ 
 export async function upsertMyLocation(
   latitude:  number,
   longitude: number,
@@ -16,7 +19,7 @@ export async function upsertMyLocation(
     updated_at: new Date().toISOString(),
   });
 }
-
+ 
 export function subscribeFriendLocations(
   onUpdate: (loc: FriendLocation) => void,
 ): RealtimeChannel {
@@ -32,10 +35,10 @@ export function subscribeFriendLocations(
           .select("display_name, avatar_url")
           .eq("id", row.user_id)
           .single();
-
+ 
         const coords = parsePostGISPoint(row.location ?? "");
         if (!coords || !profile) return;
-
+ 
         onUpdate({
           user_id:    row.user_id,
           longitude:  coords.longitude,
@@ -47,38 +50,3 @@ export function subscribeFriendLocations(
     )
     .subscribe();
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

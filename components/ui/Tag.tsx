@@ -4,6 +4,7 @@
 // ─────────────────────────────────────────────────────────────
 import { CATEGORY_META, COLOURS } from "@/lib/constants";
 import { Ionicons } from "@expo/vector-icons";
+import { Text, View } from "react-native";
 
 interface TagProps {
   category: string;
