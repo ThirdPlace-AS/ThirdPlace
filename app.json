@@ -34,13 +34,16 @@
     "plugins": [
       "expo-font",
       "expo-router",
-      ["@rnmapbox/maps"],
+      [
+        "@rnmapbox/maps"
+      ],
       [
         "expo-location",
         {
           "locationAlwaysAndWhenInUsePermission": "Allow ThirdPlace to use your location."
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true,
