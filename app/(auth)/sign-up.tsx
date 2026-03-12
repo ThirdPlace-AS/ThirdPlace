@@ -1,27 +1,24 @@
-// ─────────────────────────────────────────────────────────────
 // app/(auth)/sign-up.tsx
-
 import { SocialAuthButton } from "@/components/auth/SocialAuthButton";
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/hooks/useAuth";
 import { COLOURS } from "@/lib/constants";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useState } from "react";
+import React, { useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
-import { ScrollView } from "react-native-gesture-handler";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-// ─────────────────────────────────────────────────────────────
-export function SignUpScreen() {
+export default function SignUpScreen() {
   const {
     signUpWithEmail,
     signInWithGoogle,
@@ -52,6 +49,8 @@ export function SignUpScreen() {
     borderWidth: 1.5,
     borderColor: COLOURS.border,
   };
+
+  // All three fields must be valid before the button enables
   const isReady =
     displayName.length >= 2 && email.includes("@") && password.length >= 8;
 
@@ -70,6 +69,7 @@ export function SignUpScreen() {
             <TouchableOpacity
               onPress={() => router.back()}
               style={{ marginBottom: 32 }}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
               <Ionicons
                 name="arrow-back"
@@ -100,6 +100,7 @@ export function SignUpScreen() {
                 Find your people, find your place
               </Text>
 
+              {/* Error banner */}
               {error && (
                 <View
                   style={{
@@ -126,6 +127,7 @@ export function SignUpScreen() {
                 </View>
               )}
 
+              {/* Form fields */}
               <View style={{ gap: 12 }}>
                 <TextInput
                   style={inputStyle}
@@ -134,6 +136,7 @@ export function SignUpScreen() {
                   value={displayName}
                   onChangeText={setDisplayName}
                   autoCapitalize="words"
+                  autoCorrect={false}
                 />
                 <TextInput
                   style={inputStyle}
@@ -143,18 +146,19 @@ export function SignUpScreen() {
                   onChangeText={setEmail}
                   keyboardType="email-address"
                   autoCapitalize="none"
+                  autoCorrect={false}
                 />
                 <View>
                   <TextInput
                     style={inputStyle}
-                    placeholder="Password"
+                    placeholder="Password (8+ characters)"
                     placeholderTextColor={COLOURS.textTertiary}
                     value={password}
                     onChangeText={setPassword}
                     secureTextEntry={!showPassword}
                   />
                   <TouchableOpacity
-                    onPress={() => setShowPassword(!showPassword)}
+                    onPress={() => setShowPassword((p) => !p)}
                     style={{ position: "absolute", right: 16, top: 14 }}
                   >
                     <Ionicons
@@ -164,11 +168,20 @@ export function SignUpScreen() {
                     />
                   </TouchableOpacity>
                 </View>
+
+                {/* Inline password hint */}
                 {password.length > 0 && password.length < 8 && (
-                  <Text style={{ fontSize: 12, color: COLOURS.warning }}>
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      color: COLOURS.warning,
+                      marginTop: -4,
+                    }}
+                  >
                     Use at least 8 characters
                   </Text>
                 )}
+
                 <Button
                   label="Create account"
                   isLoading={isLoading}
@@ -178,6 +191,7 @@ export function SignUpScreen() {
                 />
               </View>
 
+              {/* Social auth divider */}
               <View
                 style={{
                   flexDirection: "row",
@@ -261,6 +275,3 @@ export function SignUpScreen() {
     </SafeAreaView>
   );
 }
-
-export { SignUpScreen as default } from "./sign-up";
-

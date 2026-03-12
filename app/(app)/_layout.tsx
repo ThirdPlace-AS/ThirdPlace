@@ -1,16 +1,19 @@
-// ─────────────────────────────────────────────────────────────
-// app/(app)/_layout.tsx  — Bottom tab navigator
-// ─────────────────────────────────────────────────────────────
+// app/(app)/_layout.tsx
+// Tab bar navigator for all authenticated (and guest) screens.
+// Expo Router requires this as a separate file in the route group.
+// Lock badges on Chat / Create / Profile tabs for guest users.
 import { useGuest } from "@/context/GuestContext";
 import { COLOURS } from "@/lib/constants";
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
+import React from "react";
 import { Text, View } from "react-native";
 
-// Tab icon with an optional small lock badge for guest-restricted tabs.
-// The badge uses a tiny red dot with a lock emoji — unmistakable but
-// non-intrusive. It doesn't block tapping; GuestGate handles that inside
-// the screen itself.
+// ─── Tab icon with optional lock badge ───────────────────────
+// The badge signals to guests that the tab has restricted actions.
+// It does NOT block navigation — GuestGate inside each screen
+// intercepts individual actions. This is intentional: we want
+// guests to SEE what they're missing (curiosity → conversion).
 function TabIcon({
   name,
   color,
@@ -29,19 +32,19 @@ function TabIcon({
         <View
           style={{
             position: "absolute",
-            top: -4,
-            right: -6,
+            top: -3,
+            right: -5,
+            width: 13,
+            height: 13,
+            borderRadius: 7,
             backgroundColor: "#EF4444",
-            borderRadius: 8,
-            width: 14,
-            height: 14,
             alignItems: "center",
             justifyContent: "center",
             borderWidth: 1.5,
             borderColor: COLOURS.white,
           }}
         >
-          <Text style={{ fontSize: 7, color: "#fff" }}>🔒</Text>
+          <Text style={{ fontSize: 6, color: "#fff", lineHeight: 8 }}>🔒</Text>
         </View>
       )}
     </View>
@@ -94,7 +97,6 @@ export default function AppLayout() {
               name="add-circle-outline"
               color={color}
               size={size + 4}
-              // Guests CAN tap create but GuestGate triggers immediately inside
               locked={isGuest}
             />
           ),
@@ -128,7 +130,7 @@ export default function AppLayout() {
           ),
         }}
       />
-      {/* Hide detail screens from tab bar */}
+      {/* Detail screens — hidden from tab bar, navigated to programmatically */}
       <Tabs.Screen name="map/[experienceId]" options={{ href: null }} />
       <Tabs.Screen name="chat/[roomId]" options={{ href: null }} />
     </Tabs>

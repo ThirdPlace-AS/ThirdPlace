@@ -1,6 +1,4 @@
-// ─────────────────────────────────────────────────────────────
 // app/(auth)/sign-in.tsx
-// ─────────────────────────────────────────────────────────────
 import { OTPInput } from "@/components/auth/OTPInput";
 import { SocialAuthButton } from "@/components/auth/SocialAuthButton";
 import { Button } from "@/components/ui/Button";
@@ -8,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { COLOURS } from "@/lib/constants";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useState } from "react";
+import React, { useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -23,7 +21,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 type Mode = "email" | "phone";
 
-export function SignInScreen() {
+export default function SignInScreen() {
   const {
     signInWithEmail,
     signInWithGoogle,
@@ -43,6 +41,7 @@ export function SignInScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Wrap any async auth call with loading state
   const wrap = async (fn: () => Promise<void>) => {
     setIsLoading(true);
     await fn();
@@ -75,6 +74,7 @@ export function SignInScreen() {
             <TouchableOpacity
               onPress={() => router.back()}
               style={{ marginBottom: 32 }}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
               <Ionicons
                 name="arrow-back"
@@ -105,7 +105,7 @@ export function SignInScreen() {
                 Sign in to continue
               </Text>
 
-              {/* Mode toggle */}
+              {/* Email / Phone toggle */}
               <View
                 style={{
                   flexDirection: "row",
@@ -148,6 +148,7 @@ export function SignInScreen() {
                 ))}
               </View>
 
+              {/* Error banner */}
               {error && (
                 <View
                   style={{
@@ -171,6 +172,7 @@ export function SignInScreen() {
                 </View>
               )}
 
+              {/* Email fields */}
               {mode === "email" && (
                 <View style={{ gap: 12 }}>
                   <TextInput
@@ -181,6 +183,7 @@ export function SignInScreen() {
                     onChangeText={setEmail}
                     keyboardType="email-address"
                     autoCapitalize="none"
+                    autoCorrect={false}
                   />
                   <View>
                     <TextInput
@@ -192,7 +195,7 @@ export function SignInScreen() {
                       secureTextEntry={!showPassword}
                     />
                     <TouchableOpacity
-                      onPress={() => setShowPassword(!showPassword)}
+                      onPress={() => setShowPassword((p) => !p)}
                       style={{ position: "absolute", right: 16, top: 14 }}
                     >
                       <Ionicons
@@ -213,6 +216,7 @@ export function SignInScreen() {
                 </View>
               )}
 
+              {/* Phone / OTP fields */}
               {mode === "phone" && (
                 <View style={{ gap: 12 }}>
                   <TextInput
@@ -261,6 +265,7 @@ export function SignInScreen() {
                 </View>
               )}
 
+              {/* Social auth divider */}
               <View
                 style={{
                   flexDirection: "row",
@@ -323,5 +328,3 @@ export function SignInScreen() {
     </SafeAreaView>
   );
 }
-
-export default SignInScreen;
