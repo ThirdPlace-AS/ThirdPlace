@@ -1,11 +1,56 @@
 // ─────────────────────────────────────────────────────────────
 // app/(app)/_layout.tsx  — Bottom tab navigator
 // ─────────────────────────────────────────────────────────────
+import { useGuest } from "@/context/GuestContext";
 import { COLOURS } from "@/lib/constants";
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
+import { Text, View } from "react-native";
+
+// Tab icon with an optional small lock badge for guest-restricted tabs.
+// The badge uses a tiny red dot with a lock emoji — unmistakable but
+// non-intrusive. It doesn't block tapping; GuestGate handles that inside
+// the screen itself.
+function TabIcon({
+  name,
+  color,
+  size,
+  locked = false,
+}: {
+  name: React.ComponentProps<typeof Ionicons>["name"];
+  color: string;
+  size: number;
+  locked?: boolean;
+}) {
+  return (
+    <View style={{ position: "relative" }}>
+      <Ionicons name={name} size={size} color={color} />
+      {locked && (
+        <View
+          style={{
+            position: "absolute",
+            top: -4,
+            right: -6,
+            backgroundColor: "#EF4444",
+            borderRadius: 8,
+            width: 14,
+            height: 14,
+            alignItems: "center",
+            justifyContent: "center",
+            borderWidth: 1.5,
+            borderColor: COLOURS.white,
+          }}
+        >
+          <Text style={{ fontSize: 7, color: "#fff" }}>🔒</Text>
+        </View>
+      )}
+    </View>
+  );
+}
 
 export default function AppLayout() {
+  const { isGuest } = useGuest();
+
   return (
     <Tabs
       screenOptions={{
@@ -27,7 +72,7 @@ export default function AppLayout() {
         options={{
           title: "Map",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="map-outline" size={size} color={color} />
+            <TabIcon name="map-outline" color={color} size={size} />
           ),
         }}
       />
@@ -36,7 +81,7 @@ export default function AppLayout() {
         options={{
           title: "Discover",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="layers-outline" size={size} color={color} />
+            <TabIcon name="layers-outline" color={color} size={size} />
           ),
         }}
       />
@@ -45,7 +90,13 @@ export default function AppLayout() {
         options={{
           title: "Create",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="add-circle-outline" size={size + 4} color={color} />
+            <TabIcon
+              name="add-circle-outline"
+              color={color}
+              size={size + 4}
+              // Guests CAN tap create but GuestGate triggers immediately inside
+              locked={isGuest}
+            />
           ),
         }}
       />
@@ -54,7 +105,12 @@ export default function AppLayout() {
         options={{
           title: "Chat",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="chatbubbles-outline" size={size} color={color} />
+            <TabIcon
+              name="chatbubbles-outline"
+              color={color}
+              size={size}
+              locked={isGuest}
+            />
           ),
         }}
       />
@@ -63,7 +119,12 @@ export default function AppLayout() {
         options={{
           title: "Profile",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" size={size} color={color} />
+            <TabIcon
+              name="person-outline"
+              color={color}
+              size={size}
+              locked={isGuest}
+            />
           ),
         }}
       />

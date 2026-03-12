@@ -2,17 +2,26 @@
 // app/(auth)/welcome.tsx
 // ─────────────────────────────────────────────────────────────
 import { Button } from "@/components/ui/Button";
+import { useGuest } from "@/context/GuestContext";
 import { COLOURS } from "@/lib/constants";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
-import { Dimensions, Text, View } from "react-native";
+import { Dimensions, Text, TouchableOpacity, View } from "react-native";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const { height: SCREEN_H } = Dimensions.get("window");
 
 export default function WelcomeScreen() {
+  const { enterGuestMode } = useGuest();
+
+  const handleContinueAsGuest = () => {
+    enterGuestMode();
+    // replace() so Back from the map can't return to welcome while in guest mode
+    router.replace("/(app)/map");
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: COLOURS.white }}>
       <View
@@ -137,6 +146,62 @@ export default function WelcomeScreen() {
             variant="secondary"
             onPress={() => router.push("/(auth)/sign-in")}
           />
+
+          {/* ── Guest skip ─────────────────────────────────────────
+              Visually de-emphasised so it doesn't compete with sign-up.
+              The disclosure text ("Browsing only…") sets expectations
+              so guests aren't surprised by GuestGate prompts later.     */}
+          <View style={{ alignItems: "center", marginTop: 8 }}>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                width: "100%",
+                marginBottom: 16,
+              }}
+            >
+              <View
+                style={{ flex: 1, height: 1, backgroundColor: "#F3F4F6" }}
+              />
+              <Text
+                style={{
+                  paddingHorizontal: 12,
+                  fontSize: 12,
+                  color: "#D1D5DB",
+                }}
+              >
+                or
+              </Text>
+              <View
+                style={{ flex: 1, height: 1, backgroundColor: "#F3F4F6" }}
+              />
+            </View>
+
+            <TouchableOpacity
+              onPress={handleContinueAsGuest}
+              activeOpacity={0.6}
+              style={{
+                paddingVertical: 8,
+                paddingHorizontal: 16,
+                alignItems: "center",
+              }}
+            >
+              <Text style={{ fontSize: 14, color: "#9CA3AF" }}>
+                Continue as guest{" "}
+                <Text style={{ color: "#D1D5DB" }}>— limited access</Text>
+              </Text>
+            </TouchableOpacity>
+            <Text
+              style={{
+                fontSize: 11,
+                color: "#D1D5DB",
+                textAlign: "center",
+                marginTop: 4,
+              }}
+            >
+              Browse map &amp; discover · Can&apos;t join, create, or chat
+            </Text>
+          </View>
         </View>
       </Animated.View>
     </SafeAreaView>

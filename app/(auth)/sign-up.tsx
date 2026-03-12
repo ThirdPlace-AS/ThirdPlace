@@ -11,13 +11,12 @@ import { useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
-
+import { ScrollView } from "react-native-gesture-handler";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -263,5 +262,5 @@ export function SignUpScreen() {
   );
 }
 
-export default SignUpScreen;
+export { SignUpScreen as default } from "./sign-up";
 

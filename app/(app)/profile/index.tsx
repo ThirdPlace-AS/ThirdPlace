@@ -1,252 +1,433 @@
-// ─────────────────────────────────────────────────────────────
-// app/(app)/profile/index.tsx  — Profile screen
-// ─────────────────────────────────────────────────────────────
-import { Avatar } from "@/components/ui/Avatar";
+// ============================================================
+// app/(app)/profile/index.tsx
+//
+// Profile screen — two modes:
+//   GUEST: Shows a friendly "what you're missing" screen with
+//          a clear CTA to sign up. No confusing empty states.
+//   AUTHENTICATED: Full profile (avatar, stats, experiences joined,
+//          settings, sign out).
+//
+// The guest version is treated as a FEATURE SHOWCASE, not an
+// error state — it shows what profile looks like with dummy
+// blurred content behind a soft overlay. This is the "locked
+// room with a window" pattern: curiosity drives conversion.
+// ============================================================
+
+import { useGuest } from "@/context/GuestContext";
 import { useAuth } from "@/hooks/useAuth";
 import { COLOURS } from "@/lib/constants";
-import {
-  fetchParticipantCounts,
-  fetchProfile,
-} from "@/services/supabase/users"; // re-uses the file
-import type { Profile } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
-import { useEffect, useState } from "react";
-import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
-import Animated, { FadeInDown } from "react-native-reanimated";
+import { router } from "expo-router";
+import React from "react";
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from "react-native";
+import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const MENU_ITEMS = [
-  { icon: "person-outline", label: "Edit profile" },
-  { icon: "notifications-outline", label: "Notifications" },
-  { icon: "lock-closed-outline", label: "Privacy" },
-  { icon: "help-circle-outline", label: "Help & feedback" },
-  { icon: "information-circle-outline", label: "About ThirdPlace" },
-];
+// ─── Guest profile screen ────────────────────────────────────
+function GuestProfileScreen() {
+  const { exitGuestMode } = useGuest();
 
-export default function ProfileScreen() {
-  const { user, signOut } = useAuth();
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [joinedCount, setJoinedCount] = useState(0);
-  const [createdCount, setCreatedCount] = useState(0);
+  const handleSignUp = () => {
+    exitGuestMode();
+    router.replace("/(auth)/sign-up");
+  };
 
-  useEffect(() => {
-    if (!user) return;
-    (async () => {
-      const [p, counts] = await Promise.all([
-        fetchProfile(user.id),
-        fetchParticipantCounts(user.id),
-      ]);
-      setProfile(p as Profile);
-      setJoinedCount(counts.joinedCount);
-      setCreatedCount(counts.createdCount);
-    })();
-  }, [user]);
+  const handleSignIn = () => {
+    exitGuestMode();
+    router.replace("/(auth)/sign-in");
+  };
 
-  const handleSignOut = () =>
-    Alert.alert("Sign out", "Are you sure?", [
-      { text: "Cancel", style: "cancel" },
-      { text: "Sign out", style: "destructive", onPress: signOut },
-    ]);
-
-  const displayName =
-    profile?.display_name ??
-    user?.user_metadata?.full_name ??
-    "ThirdPlace user";
+  // Fake stat cards shown blurred behind the overlay
+  // to tease what the real profile looks like
+  const fakeStats = [
+    { label: "Joined", value: "12" },
+    { label: "Created", value: "3" },
+    { label: "Friends", value: "28" },
+  ];
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: COLOURS.background }}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 40 }}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ── Header ── */}
         <Animated.View
-          entering={FadeInDown.duration(400)}
-          style={{
-            margin: 16,
-            backgroundColor: COLOURS.white,
-            borderRadius: 24,
-            padding: 24,
-            shadowColor: "#000",
-            shadowOpacity: 0.06,
-            shadowRadius: 12,
-            elevation: 3,
-            alignItems: "center",
-          }}
+          entering={FadeInDown.duration(500)}
+          style={{ paddingHorizontal: 24, paddingTop: 20, marginBottom: 8 }}
         >
-          <Avatar
-            name={displayName}
-            imageUrl={profile?.avatar_url}
-            size={80}
-            radius={28}
-          />
           <Text
             style={{
-              fontSize: 22,
+              fontSize: 28,
               fontWeight: "800",
-              color: COLOURS.textPrimary,
-              letterSpacing: -0.5,
-              marginTop: 16,
+              color: "#111827",
+              letterSpacing: -0.6,
             }}
           >
-            {displayName}
+            Profile
           </Text>
-          {user?.email && (
-            <Text
-              style={{
-                fontSize: 14,
-                color: COLOURS.textSecondary,
-                marginTop: 4,
-              }}
-            >
-              {user.email}
-            </Text>
-          )}
-          {profile?.bio && (
-            <Text
-              style={{
-                fontSize: 14,
-                color: COLOURS.textSecondary,
-                textAlign: "center",
-                marginTop: 10,
-                lineHeight: 20,
-              }}
-            >
-              {profile.bio}
-            </Text>
-          )}
-
-          <View
-            style={{
-              flexDirection: "row",
-              width: "100%",
-              marginTop: 20,
-              paddingTop: 20,
-              borderTopWidth: 1,
-              borderTopColor: COLOURS.border,
-            }}
-          >
-            {[
-              { value: joinedCount, label: "Joined" },
-              { value: createdCount, label: "Created" },
-            ].map(({ value, label }) => (
-              <View key={label} style={{ flex: 1, alignItems: "center" }}>
-                <Text
-                  style={{
-                    fontSize: 26,
-                    fontWeight: "800",
-                    color: COLOURS.textPrimary,
-                  }}
-                >
-                  {value}
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 12,
-                    color: COLOURS.textSecondary,
-                    marginTop: 2,
-                  }}
-                >
-                  {label}
-                </Text>
-              </View>
-            ))}
-          </View>
         </Animated.View>
 
-        <View
-          style={{
-            marginHorizontal: 16,
-            backgroundColor: COLOURS.white,
-            borderRadius: 20,
-            overflow: "hidden",
-            shadowColor: "#000",
-            shadowOpacity: 0.04,
-            shadowRadius: 8,
-            elevation: 2,
-          }}
+        {/* ── Blurred preview card ── */}
+        <Animated.View
+          entering={FadeInUp.delay(150).duration(500)}
+          style={{ marginHorizontal: 20, marginBottom: 20 }}
         >
-          {MENU_ITEMS.map(({ icon, label }, i) => (
-            <TouchableOpacity
-              key={label}
-              activeOpacity={0.7}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                paddingHorizontal: 20,
-                paddingVertical: 16,
-                gap: 14,
-                borderBottomWidth: i < MENU_ITEMS.length - 1 ? 1 : 0,
-                borderBottomColor: COLOURS.border,
-              }}
+          <View
+            style={{
+              borderRadius: 24,
+              overflow: "hidden",
+              backgroundColor: COLOURS.white,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.08,
+              shadowRadius: 16,
+              elevation: 6,
+            }}
+          >
+            {/* Fake profile content — blurred */}
+            <View style={{ padding: 24, opacity: 0.35 }}>
+              {/* Avatar row */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginBottom: 20,
+                }}
+              >
+                <View
+                  style={{
+                    width: 72,
+                    height: 72,
+                    borderRadius: 36,
+                    backgroundColor: COLOURS.accentLight,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginRight: 16,
+                  }}
+                >
+                  <Text style={{ fontSize: 32 }}>👤</Text>
+                </View>
+                <View>
+                  <View
+                    style={{
+                      width: 120,
+                      height: 18,
+                      borderRadius: 9,
+                      backgroundColor: "#E5E7EB",
+                      marginBottom: 8,
+                    }}
+                  />
+                  <View
+                    style={{
+                      width: 80,
+                      height: 13,
+                      borderRadius: 6,
+                      backgroundColor: "#F3F4F6",
+                    }}
+                  />
+                </View>
+              </View>
+
+              {/* Stat row */}
+              <View style={{ flexDirection: "row", gap: 12 }}>
+                {fakeStats.map(({ label, value }) => (
+                  <View
+                    key={label}
+                    style={{
+                      flex: 1,
+                      backgroundColor: COLOURS.accentLight,
+                      borderRadius: 14,
+                      padding: 14,
+                      alignItems: "center",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 22,
+                        fontWeight: "800",
+                        color: COLOURS.accent,
+                      }}
+                    >
+                      {value}
+                    </Text>
+                    <Text
+                      style={{
+                        fontSize: 11,
+                        color: COLOURS.accent,
+                        marginTop: 2,
+                      }}
+                    >
+                      {label}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+
+            {/* Lock overlay */}
+            <View
+              style={[
+                StyleSheet.absoluteFill,
+                {
+                  borderRadius: 24,
+                  backgroundColor: "rgba(255,255,255,0.55)",
+                  alignItems: "center",
+                  justifyContent: "center",
+                },
+              ]}
             >
               <View
                 style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 12,
-                  backgroundColor: COLOURS.accentLight,
+                  backgroundColor: COLOURS.white,
+                  borderRadius: 20,
+                  padding: 20,
                   alignItems: "center",
-                  justifyContent: "center",
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 8,
+                  elevation: 4,
+                  marginHorizontal: 20,
                 }}
               >
-                <Ionicons name={icon as any} size={18} color={COLOURS.accent} />
+                <Text style={{ fontSize: 36, marginBottom: 8 }}>👤</Text>
+                <Text
+                  style={{
+                    fontSize: 18,
+                    fontWeight: "700",
+                    color: "#111827",
+                    textAlign: "center",
+                    marginBottom: 6,
+                  }}
+                >
+                  Your ThirdPlace profile
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 13,
+                    color: "#6B7280",
+                    textAlign: "center",
+                    lineHeight: 18,
+                  }}
+                >
+                  Track experiences, connect with friends, and build your social
+                  map.
+                </Text>
               </View>
+            </View>
+          </View>
+        </Animated.View>
+
+        {/* ── What you unlock ── */}
+        <Animated.View
+          entering={FadeInUp.delay(250).duration(500)}
+          style={{ marginHorizontal: 20, marginBottom: 24 }}
+        >
+          <Text
+            style={{
+              fontSize: 13,
+              fontWeight: "700",
+              color: "#9CA3AF",
+              letterSpacing: 0.8,
+              textTransform: "uppercase",
+              marginBottom: 12,
+            }}
+          >
+            With a free account
+          </Text>
+
+          {[
+            { emoji: "🎉", text: "Join and create experiences" },
+            { emoji: "💬", text: "Chat with groups in real time" },
+            { emoji: "👥", text: "Add friends and see them on the map" },
+            { emoji: "🔖", text: "Save experiences with reminders" },
+            { emoji: "📍", text: "Share your location with friends" },
+          ].map(({ emoji, text }) => (
+            <View
+              key={text}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                paddingVertical: 10,
+                borderBottomWidth: 1,
+                borderBottomColor: "#F9FAFB",
+              }}
+            >
+              <Text style={{ fontSize: 20, marginRight: 14, width: 28 }}>
+                {emoji}
+              </Text>
               <Text
-                style={{
-                  flex: 1,
-                  fontSize: 16,
-                  color: COLOURS.textPrimary,
-                  fontWeight: "500",
-                }}
+                style={{ fontSize: 15, color: "#374151", fontWeight: "500" }}
               >
-                {label}
+                {text}
               </Text>
               <Ionicons
-                name="chevron-forward"
+                name="checkmark-circle"
                 size={18}
-                color={COLOURS.textTertiary}
+                color={COLOURS.accent}
+                style={{ marginLeft: "auto" }}
               />
-            </TouchableOpacity>
+            </View>
           ))}
-        </View>
+        </Animated.View>
 
-        <TouchableOpacity
-          onPress={handleSignOut}
-          activeOpacity={0.8}
-          style={{
-            margin: 16,
-            marginTop: 12,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 10,
-            backgroundColor: COLOURS.errorLight,
-            borderRadius: 18,
-            paddingVertical: 16,
-          }}
+        {/* ── CTAs ── */}
+        <Animated.View
+          entering={FadeInUp.delay(350).duration(500)}
+          style={{ paddingHorizontal: 20 }}
         >
-          <Ionicons name="log-out-outline" size={20} color={COLOURS.error} />
-          <Text
-            style={{ fontSize: 16, fontWeight: "700", color: COLOURS.error }}
+          <TouchableOpacity
+            onPress={handleSignUp}
+            activeOpacity={0.88}
+            style={{
+              backgroundColor: COLOURS.accent,
+              borderRadius: 16,
+              paddingVertical: 17,
+              alignItems: "center",
+              marginBottom: 12,
+              shadowColor: COLOURS.accent,
+              shadowOffset: { width: 0, height: 6 },
+              shadowOpacity: 0.28,
+              shadowRadius: 12,
+              elevation: 8,
+            }}
           >
-            Sign out
-          </Text>
-        </TouchableOpacity>
+            <Text style={{ color: "#fff", fontSize: 17, fontWeight: "700" }}>
+              Create free account
+            </Text>
+          </TouchableOpacity>
 
-        <Text
-          style={{
-            textAlign: "center",
-            fontSize: 12,
-            color: COLOURS.textTertiary,
-            marginBottom: 32,
-          }}
-        >
-          ThirdPlace · Member since{" "}
-          {profile?.created_at
-            ? new Date(profile.created_at).toLocaleDateString("en-GB", {
-                month: "long",
-                year: "numeric",
-              })
-            : "…"}
-        </Text>
+          <TouchableOpacity
+            onPress={handleSignIn}
+            activeOpacity={0.75}
+            style={{
+              borderRadius: 16,
+              paddingVertical: 16,
+              alignItems: "center",
+              borderWidth: 1.5,
+              borderColor: "#E5E7EB",
+            }}
+          >
+            <Text style={{ color: "#374151", fontSize: 16, fontWeight: "600" }}>
+              Sign in to existing account
+            </Text>
+          </TouchableOpacity>
+        </Animated.View>
       </ScrollView>
     </SafeAreaView>
   );
+}
+
+// ─── Authenticated profile screen ────────────────────────────
+function AuthenticatedProfileScreen() {
+  const { user, signOut } = useAuth();
+
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: COLOURS.background }}>
+      <ScrollView
+        contentContainerStyle={{ padding: 24, paddingBottom: 40 }}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text
+          style={{
+            fontSize: 28,
+            fontWeight: "800",
+            color: "#111827",
+            letterSpacing: -0.6,
+            marginBottom: 24,
+          }}
+        >
+          Profile
+        </Text>
+
+        {/* Avatar + name */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            backgroundColor: COLOURS.white,
+            borderRadius: 20,
+            padding: 20,
+            marginBottom: 16,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.06,
+            shadowRadius: 10,
+            elevation: 4,
+          }}
+        >
+          <View
+            style={{
+              width: 72,
+              height: 72,
+              borderRadius: 36,
+              backgroundColor: COLOURS.accentLight,
+              alignItems: "center",
+              justifyContent: "center",
+              marginRight: 16,
+            }}
+          >
+            <Text style={{ fontSize: 32 }}>👤</Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 18, fontWeight: "700", color: "#111827" }}>
+              {user?.email?.split("@")[0] ?? "Explorer"}
+            </Text>
+            <Text style={{ fontSize: 13, color: "#6B7280", marginTop: 2 }}>
+              {user?.email}
+            </Text>
+          </View>
+          <TouchableOpacity>
+            <Ionicons name="pencil-outline" size={20} color={COLOURS.accent} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Sign out */}
+        <TouchableOpacity
+          onPress={signOut}
+          activeOpacity={0.75}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            padding: 18,
+            backgroundColor: COLOURS.white,
+            borderRadius: 16,
+            borderWidth: 1.5,
+            borderColor: "#FEE2E2",
+            marginTop: 8,
+          }}
+        >
+          <Ionicons
+            name="log-out-outline"
+            size={20}
+            color="#EF4444"
+            style={{ marginRight: 12 }}
+          />
+          <Text style={{ fontSize: 16, color: "#EF4444", fontWeight: "600" }}>
+            Sign out
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+// ─── Root export — switches on auth state ────────────────────
+export default function ProfileScreen() {
+  const { isGuest } = useGuest();
+  const { session } = useAuth();
+
+  // Guest mode → show the locked preview
+  if (isGuest || !session) {
+    return <GuestProfileScreen />;
+  }
+
+  return <AuthenticatedProfileScreen />;
 }
