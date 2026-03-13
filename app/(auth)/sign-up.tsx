@@ -21,6 +21,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function SignUpScreen() {
   const {
     signUpWithEmail,
+    resendSignUpEmail,
     signInWithGoogle,
     signInWithFacebook,
     error,
@@ -32,11 +33,22 @@ export default function SignUpScreen() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [awaitingEmailConfirmation, setAwaitingEmailConfirmation] =
+    useState(false);
 
   const handleSignUp = async () => {
     setIsLoading(true);
-    await signUpWithEmail(email.trim(), password, displayName.trim());
+    const outcome = await signUpWithEmail(
+      email.trim(),
+      password,
+      displayName.trim(),
+    );
     setIsLoading(false);
+
+    // If Supabase is configured to require email confirmation, there is no
+    // session yet. Show the "check your email" step so the user doesn't feel
+    // like the button did nothing.
+    if (outcome === "confirm_email") setAwaitingEmailConfirmation(true);
   };
 
   const inputStyle = {
@@ -100,6 +112,87 @@ export default function SignUpScreen() {
                 Find your people, find your place
               </Text>
 
+              {/* Email confirmation step (Supabase Confirm Email enabled) */}
+              {awaitingEmailConfirmation && (
+                <View
+                  style={{
+                    backgroundColor: COLOURS.accentLight,
+                    borderRadius: 16,
+                    borderWidth: 1,
+                    borderColor: "#DBEAFE",
+                    padding: 16,
+                    marginBottom: 16,
+                    gap: 10,
+                  }}
+                >
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 10,
+                    }}
+                  >
+                    <Ionicons
+                      name="mail-outline"
+                      size={20}
+                      color={COLOURS.accent}
+                    />
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        fontWeight: "800",
+                        color: COLOURS.textPrimary,
+                      }}
+                    >
+                      Check your email
+                    </Text>
+                  </View>
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      color: COLOURS.textSecondary,
+                      lineHeight: 18,
+                    }}
+                  >
+                    We sent a confirmation link to{" "}
+                    <Text style={{ fontWeight: "800", color: COLOURS.textPrimary }}>
+                      {email.trim()}
+                    </Text>
+                    . Tap it to finish creating your account, then come back
+                    and sign in.
+                  </Text>
+
+                  <Button
+                    label="Resend confirmation email"
+                    variant="secondary"
+                    size="lg"
+                    isLoading={isLoading}
+                    onPress={async () => {
+                      setIsLoading(true);
+                      await resendSignUpEmail(email.trim());
+                      setIsLoading(false);
+                    }}
+                  />
+                  <Button
+                    label="Sign in"
+                    variant="ghost"
+                    onPress={() => router.replace("/(auth)/sign-in")}
+                  />
+
+                  <TouchableOpacity
+                    onPress={() => {
+                      setAwaitingEmailConfirmation(false);
+                      clearError();
+                    }}
+                    style={{ alignItems: "center", paddingVertical: 6 }}
+                  >
+                    <Text style={{ color: COLOURS.textTertiary, fontSize: 13 }}>
+                      Use a different email
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
               {/* Error banner */}
               {error && (
                 <View
@@ -128,7 +221,7 @@ export default function SignUpScreen() {
               )}
 
               {/* Form fields */}
-              <View style={{ gap: 12 }}>
+              <View style={{ gap: 12, opacity: awaitingEmailConfirmation ? 0.4 : 1 }}>
                 <TextInput
                   style={inputStyle}
                   placeholder="Display name"
@@ -186,7 +279,7 @@ export default function SignUpScreen() {
                   label="Create account"
                   isLoading={isLoading}
                   onPress={handleSignUp}
-                  disabled={!isReady}
+                  disabled={!isReady || awaitingEmailConfirmation}
                   size="lg"
                 />
               </View>

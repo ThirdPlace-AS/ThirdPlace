@@ -1,33 +1,38 @@
 // ─────────────────────────────────────────────────────────────
 // app/(app)/map/index.tsx
-// Map screen — pure JSX. All business logic lives in hooks.
+// Map screen — pure JSX. All logic lives in hooks.
+// Layout:
+//   • SearchBar  — top, absolute, zIndex 20
+//   • MapboxGL   — full screen base layer
+//   • FAB stack  — bottom-right: [create ✨] [locate 📍]
+//   • VenueBottomSheet — slides up on OSM pin tap
 // ─────────────────────────────────────────────────────────────
+import { SearchBar } from "@/components/map/SearchBar";
 import { VenueBottomSheet } from "@/components/map/VenueBottomSheet";
 import { ErrorFallback } from "@/components/ui/ErrorFallback";
 import { useExperiences } from "@/hooks/useExperiences";
 import { useFriendLocations } from "@/hooks/useFriendLocation";
 import { OSLO_DEFAULT, useLocation } from "@/hooks/useLocation";
 import { useOSMPlaces } from "@/hooks/useOSMPlaces";
+import { useSearch } from "@/hooks/useSearch";
 import { useVenueSheet } from "@/hooks/useVenueSheet";
 import { CAMERA_DEBOUNCE_MS, COLOURS, MAP_CONFIG } from "@/lib/constants";
 import type { FriendLocation, OSMPlace } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
-import MapboxGL from "@rnmapbox/maps";
+import MapboxGL, { type ImageEntry } from "@rnmapbox/maps";
 import { router } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const MAPBOX_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_TOKEN;
-if (MAPBOX_TOKEN) {
-  MapboxGL.setAccessToken(MAPBOX_TOKEN);
-}
+if (MAPBOX_TOKEN) MapboxGL.setAccessToken(MAPBOX_TOKEN);
 
-// ── Mapbox sprite images ──────────────────────────────────────────────
-// Mapbox symbols can only reference images that are registered as a sprite.
-// Registering real bundled PNGs is the most reliable option (no native
-// bitmap-capture of React elements, which can crash on some devices).
-const MAPBOX_IMAGES: Record<string, number> = {
+// Emoji image map for MapboxGL.Images — registered once, stable reference
+// Mapbox symbols can only reference images registered as a sprite.
+// Using bundled PNGs is the most reliable approach (no native bitmap-capture
+// of React elements, which can crash on some devices).
+const MAPBOX_IMAGES: Record<string, ImageEntry> = {
   // Venue markers (type-specific)
   "venue-amusement_park": require("../../../assets/markers/amusement_park.png"),
   "venue-aquarium": require("../../../assets/markers/aquarium.png"),
@@ -55,9 +60,6 @@ const MAPBOX_IMAGES: Record<string, number> = {
 
   // Fallback for unknown/unsupported place types
   "venue-default": require("../../../assets/markers/default.png"),
-
-  // Optional: custom user marker (if we later hide Mapbox's default dot)
-  "user-location": require("../../../assets/markers/user.png"),
 };
 
 const VENUE_ICON_KEYS = new Set(Object.keys(MAPBOX_IMAGES));
@@ -68,23 +70,26 @@ function toVenueIconKey(placeType: string): string {
 }
 
 export default function MapScreen() {
-  const { permissionDenied, requestLocation } = useLocation();
+  const { coords, permissionDenied, requestLocation } = useLocation();
   const { experiences, isLoading, error, fetchNearby } = useExperiences();
   const { osmPlaces, fetchNearby: fetchOSM } = useOSMPlaces();
   const [shareLocation, setShareLocation] = useState(false);
   const { friends } = useFriendLocations(shareLocation);
   const venueSheet = useVenueSheet();
+  const search = useSearch(coords);
 
   const cameraRef = useRef<MapboxGL.Camera>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // ── Mount: get GPS → initial fetch ───────────────────────────
+  // Without a token, Mapbox will fail to load and can crash on some builds.
+  // Return early with a clear message instead of rendering <MapView />.
   if (!MAPBOX_TOKEN) {
     return (
-      <ErrorFallback message="Mapbox token is missing. Set EXPO_PUBLIC_MAPBOX_TOKEN in your environment." />
+      <ErrorFallback message="Mapbox token is missing. Set EXPO_PUBLIC_MAPBOX_TOKEN in .env and restart the app." />
     );
   }
 
-  // ── Mount: get GPS → initial fetch ───────────────────────────
   useEffect(() => {
     (async () => {
       const loc = (await requestLocation()) ?? OSLO_DEFAULT;
@@ -100,7 +105,26 @@ export default function MapScreen() {
     })();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── GeoJSON: ThirdPlace experience pins ──────────────────────
+  // ── Fly to coordinates (used by search result tap) ────────────
+  const flyTo = useCallback((lng: number, lat: number) => {
+    cameraRef.current?.setCamera({
+      centerCoordinate: [lng, lat],
+      zoomLevel: 15,
+      animationDuration: 600,
+    });
+  }, []);
+
+  // ── Locate me FAB ─────────────────────────────────────────────
+  const handleLocateMe = useCallback(async () => {
+    const loc = (await requestLocation()) ?? OSLO_DEFAULT;
+    cameraRef.current?.setCamera({
+      centerCoordinate: [loc.longitude, loc.latitude],
+      zoomLevel: MAP_CONFIG.DEFAULT_ZOOM,
+      animationDuration: 500,
+    });
+  }, [requestLocation]);
+
+  // ── GeoJSON ───────────────────────────────────────────────────
   const experiencesGeoJSON: GeoJSON.FeatureCollection = {
     type: "FeatureCollection",
     features: experiences.map((e) => ({
@@ -115,28 +139,20 @@ export default function MapScreen() {
     })),
   };
 
-  // ── GeoJSON: OSM venue pins ───────────────────────────────────
-  // icon-image references a key registered in <MapboxGL.Images>.
-  // Format: "venue-{place_type}" — e.g. "venue-cafe", "venue-park"
   const osmGeoJSON: GeoJSON.FeatureCollection = {
     type: "FeatureCollection",
     features: osmPlaces.map((p: OSMPlace) => ({
       type: "Feature",
       geometry: { type: "Point", coordinates: [p.longitude, p.latitude] },
       properties: {
-        // Store full venue data as a JSON string so we can recover it on tap
-        // (Mapbox feature properties are flat strings/numbers only)
         venueJson: JSON.stringify(p),
         place_type: p.place_type,
         name: p.name,
-        // icon key matches the key we registered in MAPBOX_IMAGES
-        // and falls back to venue-default for unknown place types.
         iconKey: toVenueIconKey(p.place_type),
       },
     })),
   };
 
-  // ── GeoJSON: Friend dots ──────────────────────────────────────
   const friendsGeoJSON: GeoJSON.FeatureCollection = {
     type: "FeatureCollection",
     features: friends.map((f: FriendLocation) => ({
@@ -146,13 +162,13 @@ export default function MapScreen() {
     })),
   };
 
-  // ── Camera debounce on pan/zoom ───────────────────────────────
+  // ── Debounced re-fetch on camera move ─────────────────────────
   const handleCameraChanged = (state: any) => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       const center = state?.properties?.center;
-      const lng = center ? center[0] : MAP_CONFIG.DEFAULT_LNG;
-      const lat = center ? center[1] : MAP_CONFIG.DEFAULT_LAT;
+      const lng = center?.[0] ?? MAP_CONFIG.DEFAULT_LNG;
+      const lat = center?.[1] ?? MAP_CONFIG.DEFAULT_LAT;
       void fetchNearby(lng, lat);
       void fetchOSM(lng, lat);
     }, CAMERA_DEBOUNCE_MS);
@@ -169,6 +185,7 @@ export default function MapScreen() {
 
   return (
     <View style={{ flex: 1 }}>
+      {/* ── Map ─────────────────────────────────────────────── */}
       <MapboxGL.MapView
         style={{ flex: 1 }}
         styleURL={MAP_CONFIG.MAP_STYLE}
@@ -182,18 +199,17 @@ export default function MapScreen() {
           zoomLevel={MAP_CONFIG.DEFAULT_ZOOM}
         />
 
-        {/* Register marker sprites (referenced by SymbolLayer iconImage) */}
+        {/* Emoji bitmap registration */}
         <MapboxGL.Images images={MAPBOX_IMAGES} />
 
-        {/* User location dot */}
         <MapboxGL.UserLocation visible animated />
 
-        {/* ── OSM venue markers — rendered BELOW experiences ─── */}
+        {/* OSM emoji pins */}
         <MapboxGL.ShapeSource
           id="osm-places"
           shape={osmGeoJSON}
           onPress={(e: any) => {
-            // Recover full OSMPlace object from the stringified property
+            if (search.isActive) return; // don't open sheet while searching
             const feature = e.features?.[0];
             if (!feature) return;
             try {
@@ -202,34 +218,31 @@ export default function MapScreen() {
               );
               if (venue.name) venueSheet.openVenueSheet(venue);
             } catch {
-              // Malformed JSON — ignore tap
+              /* ignore */
             }
           }}
         >
           <MapboxGL.SymbolLayer
             id="osm-emoji-pins"
             style={{
-              // Pull the registered image key from the feature property
               iconImage: ["get", "iconKey"],
               iconSize: 0.9,
               iconAllowOverlap: false,
               iconIgnorePlacement: false,
-              // Fade in at zoom 12, fully visible at zoom 13
               iconOpacity: ["interpolate", ["linear"], ["zoom"], 12, 0, 13, 1],
-              // Optional name label when zoomed close
               textField: ["get", "name"],
               textSize: 11,
               textColor: COLOURS.textSecondary,
               textOffset: [0, 1.4],
               textAnchor: "top",
+              textOptional: true,
               textAllowOverlap: false,
-              textOptional: true, // hide text if it would overlap
               textOpacity: ["interpolate", ["linear"], ["zoom"], 14, 0, 15, 1],
             }}
           />
         </MapboxGL.ShapeSource>
 
-        {/* ── ThirdPlace experience pins — rendered ON TOP ──────── */}
+        {/* ThirdPlace experience pins */}
         <MapboxGL.ShapeSource
           id="experiences"
           shape={experiencesGeoJSON}
@@ -238,15 +251,13 @@ export default function MapScreen() {
           clusterMaxZoomLevel={MAP_CONFIG.CLUSTER_ZOOM}
           onPress={(e: any) => {
             const id = e.features?.[0]?.properties?.id;
-            if (id) {
+            if (id)
               router.push({
                 pathname: "/(app)/map/[experienceId]",
                 params: { experienceId: id },
               });
-            }
           }}
         >
-          {/* Single experience — solid blue circle */}
           <MapboxGL.CircleLayer
             id="experience-circles"
             filter={["!", ["has", "point_count"]]}
@@ -257,7 +268,6 @@ export default function MapScreen() {
               circleStrokeColor: COLOURS.white,
             }}
           />
-          {/* Cluster bubble */}
           <MapboxGL.CircleLayer
             id="cluster-circles"
             filter={["has", "point_count"]}
@@ -267,7 +277,6 @@ export default function MapScreen() {
               circleOpacity: 0.92,
             }}
           />
-          {/* Cluster count */}
           <MapboxGL.SymbolLayer
             id="cluster-count"
             filter={["has", "point_count"]}
@@ -280,7 +289,7 @@ export default function MapScreen() {
           />
         </MapboxGL.ShapeSource>
 
-        {/* Friend location dots */}
+        {/* Friend dots */}
         {friends.length > 0 && (
           <MapboxGL.ShapeSource id="friends" shape={friendsGeoJSON}>
             <MapboxGL.CircleLayer
@@ -296,12 +305,29 @@ export default function MapScreen() {
         )}
       </MapboxGL.MapView>
 
-      {/* Loading pill */}
-      {isLoading && (
+      {/* ── Search bar — top overlay ─────────────────────────── */}
+      <SearchBar
+        query={search.query}
+        sections={search.sections}
+        recentSearches={search.recentSearches}
+        isLoading={search.isLoading}
+        isActive={search.isActive}
+        error={search.error}
+        onChangeQuery={search.setQuery}
+        onActivate={search.activate}
+        onDeactivate={search.deactivate}
+        onSelectRecent={search.selectRecent}
+        onRemoveRecent={search.removeRecent}
+        onClearQuery={search.clearQuery}
+        onFlyTo={flyTo}
+      />
+
+      {/* ── Loading indicator ────────────────────────────────── */}
+      {isLoading && !search.isActive && (
         <View
           style={{
             position: "absolute",
-            top: 60,
+            top: 76,
             alignSelf: "center",
             backgroundColor: COLOURS.white,
             borderRadius: 20,
@@ -323,8 +349,8 @@ export default function MapScreen() {
         </View>
       )}
 
-      {/* Error banner */}
-      {!!error && (
+      {/* ── Error banner ─────────────────────────────────────── */}
+      {!!error && !search.isActive && (
         <SafeAreaView
           style={{ position: "absolute", top: 0, left: 0, right: 0 }}
           edges={["top"]}
@@ -332,6 +358,7 @@ export default function MapScreen() {
           <View
             style={{
               margin: 12,
+              marginTop: 72,
               backgroundColor: COLOURS.errorLight,
               borderRadius: 12,
               padding: 12,
@@ -348,33 +375,85 @@ export default function MapScreen() {
         </SafeAreaView>
       )}
 
-      {/* Share location FAB */}
-      <TouchableOpacity
-        onPress={() => setShareLocation((p) => !p)}
-        style={{
-          position: "absolute",
-          bottom: 120,
-          right: 16,
-          width: 48,
-          height: 48,
-          borderRadius: 16,
-          backgroundColor: shareLocation ? COLOURS.accent : COLOURS.white,
-          alignItems: "center",
-          justifyContent: "center",
-          shadowColor: "#000",
-          shadowOpacity: 0.12,
-          shadowRadius: 8,
-          elevation: 4,
-        }}
-      >
-        <Ionicons
-          name={shareLocation ? "navigate" : "navigate-outline"}
-          size={22}
-          color={shareLocation ? COLOURS.white : COLOURS.textPrimary}
-        />
-      </TouchableOpacity>
+      {/* ── FAB stack — bottom right ─────────────────────────── */}
+      {/* Hidden while search is active so they don't cover results */}
+      {!search.isActive && (
+        <View
+          style={{
+            position: "absolute",
+            bottom: 110, // above tab bar
+            right: 16,
+            gap: 12,
+            alignItems: "center",
+          }}
+        >
+          {/* Create experience FAB */}
+          <TouchableOpacity
+            onPress={() => router.push("/(app)/create")}
+            style={{
+              width: 52,
+              height: 52,
+              borderRadius: 16,
+              backgroundColor: COLOURS.accent,
+              alignItems: "center",
+              justifyContent: "center",
+              shadowColor: COLOURS.accent,
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.4,
+              shadowRadius: 12,
+              elevation: 8,
+            }}
+          >
+            <Ionicons name="add" size={26} color={COLOURS.white} />
+          </TouchableOpacity>
 
-      {/* OSM venue bottom sheet — slides up on pin tap */}
+          {/* Locate me FAB */}
+          <TouchableOpacity
+            onPress={handleLocateMe}
+            style={{
+              width: 52,
+              height: 52,
+              borderRadius: 16,
+              backgroundColor: COLOURS.white,
+              alignItems: "center",
+              justifyContent: "center",
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.12,
+              shadowRadius: 8,
+              elevation: 4,
+            }}
+          >
+            <Ionicons name="navigate" size={22} color={COLOURS.accent} />
+          </TouchableOpacity>
+
+          {/* Share location toggle */}
+          <TouchableOpacity
+            onPress={() => setShareLocation((p) => !p)}
+            style={{
+              width: 52,
+              height: 52,
+              borderRadius: 16,
+              backgroundColor: shareLocation ? COLOURS.success : COLOURS.white,
+              alignItems: "center",
+              justifyContent: "center",
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.12,
+              shadowRadius: 8,
+              elevation: 4,
+            }}
+          >
+            <Ionicons
+              name={shareLocation ? "people" : "people-outline"}
+              size={20}
+              color={shareLocation ? COLOURS.white : COLOURS.textSecondary}
+            />
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* ── Venue bottom sheet ───────────────────────────────── */}
       <VenueBottomSheet
         venue={venueSheet.venue}
         visible={venueSheet.sheetState === "open"}

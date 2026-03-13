@@ -19,7 +19,13 @@ interface AuthState {
  
 interface AuthActions {
   signInWithEmail:    (email: string, password: string) => Promise<void>;
-  signUpWithEmail:    (email: string, password: string, displayName: string) => Promise<void>;
+  /**
+   * Returns a simple outcome so the UI can show the correct next step.
+   * `confirm_email` is common when Supabase "Confirm email" is enabled.
+   */
+  signUpWithEmail:    (email: string, password: string, displayName: string) => Promise<"signed_in" | "confirm_email" | "error">;
+  /** Re-send the email confirmation link for a signup attempt. */
+  resendSignUpEmail:  (email: string) => Promise<void>;
   signInWithGoogle:   () => Promise<void>;
   signInWithFacebook: () => Promise<void>;
   signInWithPhone:    (phone: string) => Promise<void>;
@@ -32,6 +38,12 @@ export function useAuth(): AuthState & AuthActions {
   const [session,   setSession]   = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error,     setError]     = useState<AuthError | null>(null);
+
+  // Single source of truth for every auth redirect deep link used by Supabase.
+  // Note: this URL must be allowed in Supabase Auth settings (Redirect URLs).
+  const getRedirectTo = useCallback(() => {
+    return Linking.createURL("auth/callback", { scheme: "thirdplace" });
+  }, []);
  
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -58,18 +70,64 @@ export function useAuth(): AuthState & AuthActions {
     email: string, password: string, displayName: string,
   ) => {
     setError(null);
-    const { error } = await supabase.auth.signUp({
-      email, password,
-      options: { data: { full_name: displayName } },
+
+    // Prefer deep-link redirect so the user returns to the app after confirming.
+    // If the project's Supabase Redirect URLs don't include it yet, retry without
+    // `emailRedirectTo` so account creation still works.
+    const redirectTo = getRedirectTo();
+
+    const attempt = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { full_name: displayName }, emailRedirectTo: redirectTo },
     });
+
+    // Retry without redirect when Supabase rejects the URL.
+    const needsRetryWithoutRedirect =
+      !!attempt.error && /redirect/i.test(attempt.error.message);
+
+    const { data, error } = needsRetryWithoutRedirect
+      ? await supabase.auth.signUp({
+          email,
+          password,
+          options: { data: { full_name: displayName } },
+        })
+      : attempt;
+
+    if (error) {
+      setError(error);
+      return "error";
+    }
+
+    // When "Confirm email" is enabled, Supabase creates the user but doesn't
+    // create a session until the email link is clicked.
+    return data.session ? "signed_in" : "confirm_email";
+  }, [getRedirectTo]);
+
+  const resendSignUpEmail = useCallback(async (email: string) => {
+    setError(null);
+    const redirectTo = getRedirectTo();
+
+    const attempt = await supabase.auth.resend({
+      type: "signup",
+      email,
+      options: { emailRedirectTo: redirectTo },
+    });
+
+    // Retry without redirect when Supabase rejects the URL.
+    const needsRetryWithoutRedirect =
+      !!attempt.error && /redirect/i.test(attempt.error.message);
+
+    const { error } = needsRetryWithoutRedirect
+      ? await supabase.auth.resend({ type: "signup", email })
+      : attempt;
+
     if (error) setError(error);
-  }, []);
+  }, [getRedirectTo]);
  
   const signInWithOAuth = useCallback(async (provider: "google" | "facebook") => {
     setError(null);
-    const redirectTo = Linking.createURL("auth/callback", {
-      scheme: "thirdplace",
-    });
+    const redirectTo = getRedirectTo();
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider,
       options: { redirectTo, skipBrowserRedirect: true },
@@ -79,9 +137,11 @@ export function useAuth(): AuthState & AuthActions {
  
     const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
     if (result.type === "success") {
-      await supabase.auth.exchangeCodeForSession(result.url);
+      const { error: exchangeError } =
+        await supabase.auth.exchangeCodeForSession(result.url);
+      if (exchangeError) setError(exchangeError);
     }
-  }, []);
+  }, [getRedirectTo]);
  
   const signInWithGoogle   = useCallback(() => signInWithOAuth("google"),   [signInWithOAuth]);
   const signInWithFacebook = useCallback(() => signInWithOAuth("facebook"), [signInWithOAuth]);
@@ -108,6 +168,7 @@ export function useAuth(): AuthState & AuthActions {
     error,
     signInWithEmail,
     signUpWithEmail,
+    resendSignUpEmail,
     signInWithGoogle,
     signInWithFacebook,
     signInWithPhone,

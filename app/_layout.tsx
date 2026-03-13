@@ -18,7 +18,7 @@ import "../global.css";
 //   - Guest on (auth) screen → allow through (they might want to sign up)
 function AuthGate() {
   const { session, isLoading } = useAuth();
-  const { isGuest } = useGuest();
+  const { isGuest, exitGuestMode } = useGuest();
   const segments = useSegments();
   const router = useRouter();
 
@@ -26,6 +26,9 @@ function AuthGate() {
     if (isLoading) return;
 
     const inAuth = segments[0] === "(auth)";
+
+    // Any real session means the user is no longer a guest.
+    if (session && isGuest) exitGuestMode();
 
     // Authenticated → never show auth screens
     if (session && inAuth) {
@@ -39,7 +42,7 @@ function AuthGate() {
     if (!session && !isGuest && !inAuth) {
       router.replace("/(auth)/welcome");
     }
-  }, [session, isLoading, isGuest, segments]);
+  }, [session, isLoading, isGuest, exitGuestMode, segments]);
 
   return null;
 }
