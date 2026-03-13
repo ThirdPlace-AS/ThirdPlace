@@ -43,10 +43,10 @@ export const MAP_CONFIG = {
   DEFAULT_LAT:       59.9139,
   DEFAULT_ZOOM:      13,
   FETCH_RADIUS_M:    5000,
-  REFETCH_THRESH_M:  1000,
+  REFETCH_THRESH_M:  500,
   OSM_PADDING_DEG:   0.05,
   CLUSTER_ZOOM:      14,
-  MAP_STYLE:         "mapbox://styles/mapbox/light-v11",
+  MAP_STYLE:         "mapbox://styles/thirdplace/cmmi50o1q002d01qw5mq0a2qh",
 } as const;
 
 export const ANIMATION = {
@@ -113,7 +113,7 @@ export const OSM_TO_EXPERIENCE_CATEGORY: Record<string, string> = {
 
 // ── Venue sheet ───────────────────────────────────────────────
 // Number of participants required before chat is activated
-export const CHAT_ACTIVATION_THRESHOLD = 2;
+export const CHAT_ACTIVATION_THRESHOLD = 1;
 
 export const RECENTS_STORAGE_KEY   = "@thirdplace:recent_searches";
 export const MAX_RECENT_SEARCHES   = 12;

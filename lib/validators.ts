@@ -34,11 +34,11 @@ export const createExperienceSchema = z.object({
   title: z
     .string()
     .min(3,  "Title must be at least 3 characters")
-    .max(80, "Title must be under 80 characters"),
+    .max(40, "Title must be under 40 characters"),
   description: z
     .string()
-    .min(10,  "Add a bit more detail")
-    .max(400, "Keep it under 400 characters"),
+    .min(15,  "Add a bit more detail")
+    .max(200, "Keep it under 200 characters"),
   category:        z.string().min(1, "Pick a category"),
   address:         z.string().min(3, "Add a location"),
   maxParticipants: z

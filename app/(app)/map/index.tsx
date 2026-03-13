@@ -2,13 +2,6 @@
 // app/(app)/map/index.tsx
 // Map screen — pure JSX. All business logic lives in hooks.
 // ─────────────────────────────────────────────────────────────
-import { Ionicons } from "@expo/vector-icons";
-import MapboxGL from "@rnmapbox/maps";
-import { router } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-
 import { VenueBottomSheet } from "@/components/map/VenueBottomSheet";
 import { ErrorFallback } from "@/components/ui/ErrorFallback";
 import { useExperiences } from "@/hooks/useExperiences";
@@ -16,12 +9,14 @@ import { useFriendLocations } from "@/hooks/useFriendLocation";
 import { OSLO_DEFAULT, useLocation } from "@/hooks/useLocation";
 import { useOSMPlaces } from "@/hooks/useOSMPlaces";
 import { useVenueSheet } from "@/hooks/useVenueSheet";
-import {
-  CAMERA_DEBOUNCE_MS,
-  COLOURS,
-  MAP_CONFIG,
-} from "@/lib/constants";
+import { CAMERA_DEBOUNCE_MS, COLOURS, MAP_CONFIG } from "@/lib/constants";
 import type { FriendLocation, OSMPlace } from "@/types";
+import { Ionicons } from "@expo/vector-icons";
+import MapboxGL from "@rnmapbox/maps";
+import { router } from "expo-router";
+import React, { useEffect, useRef, useState } from "react";
+import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const MAPBOX_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_TOKEN;
 if (MAPBOX_TOKEN) {
@@ -85,9 +80,7 @@ export default function MapScreen() {
 
   if (!MAPBOX_TOKEN) {
     return (
-      <ErrorFallback
-        message="Mapbox token is missing. Set EXPO_PUBLIC_MAPBOX_TOKEN in your environment."
-      />
+      <ErrorFallback message="Mapbox token is missing. Set EXPO_PUBLIC_MAPBOX_TOKEN in your environment." />
     );
   }
 
